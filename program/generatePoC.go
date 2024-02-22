@@ -26,5 +26,5 @@ func main() {
     if err2 != nil {
         log.Fatal(err2)
     }
-		fmt.Println("done..The PoC was created, execute python exploit.py...")
+		fmt.Println("done..The PoC was created, you can execute python G0BurpSQLmaPI.py...")
 }
