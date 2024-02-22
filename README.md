@@ -22,8 +22,10 @@ RECOMMENDED_FOR_G0BurpSQLmaPI:[SQLmap](https://github.com/nu11secur1ty/sqlmap-nu
 3. Execute the program `G0BurpSQLmaPI.py`
 - - `python .\G0BurpSQLmaPI.py`
 
-### No colored 
+### No colored Framework-Advanced-Auto 
+- NOTE: For advanced users!
 ```go
 go run .\G0BurpSQLmaPI.go
 ```
+
 DEMO:[soon]()
