@@ -1,6 +1,13 @@
 ### Usage:
+- For all OS that support: Python, GOlang, Sqlmap + [Burp Suite](https://portswigger.net/burp/releases#professional)
 
 - Need to install 
+
+Python:
+[Python](https://www.python.org/)
+
+GOlang:
+[GOlang](https://tip.golang.org/)
 
 SQLmap:
 ORIGINAL_SOURCE:[SQLmap](https://github.com/sqlmapproject/sqlmap)
