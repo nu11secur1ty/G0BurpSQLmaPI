@@ -17,7 +17,9 @@ func main() {
 	
     defer f.Close()
 
+	// The start of your POST or GET or whatever VULNERABLE request...
     val := `your_POST_or_GET_Request_from_Burp_Suite_here`
+	// The end of your POST or GET or whatever VULNERABLE request...
 
     data := []byte(val)
 
