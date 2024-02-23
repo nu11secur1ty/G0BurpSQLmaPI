@@ -33,10 +33,10 @@ func main() {
     }
 		fmt.Println("done..The PoC was created, and the exploit will be continuing...")
      
-    // Start Colors
+    // Start Color
     cBlue := "\033[34m"
     fmt.Println(cBlue)
-    // End color
+    // End Color
     cmd := exec.Command("python", "G0BurpSQLmaPI.py", "--input-file", "documents/doc.png")
     stdout, err := cmd.StdoutPipe()
     if err != nil {
@@ -55,10 +55,10 @@ func main() {
 	go copyOutput(stderr)
 	
     cmd.Wait()
-    // Start Colors
+    // Start Color
     cWhite := "\033[37m"
     fmt.Println(cWhite)
-    // End color
+    // End Color
 }
 
 func copyOutput(r io.Reader) {
