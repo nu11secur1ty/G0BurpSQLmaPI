@@ -6,7 +6,7 @@ There will never be a number version! This is very important to know, dear all. 
 
 ### NOTE:
 This software is not for `beginners` or people who are not in the IT sector!
-- Do not blame me dear all, who don't understand anything of it! This is YOUR PROBLEM!
+- Do not blame me dear all, who don't understand anything of it! This is [YOUR PROBLEM](https://www.youtube.com/watch?v=q291rwrDiCQ)!
 - KR @nu11secur1ty
 
 
