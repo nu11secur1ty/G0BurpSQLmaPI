@@ -28,4 +28,4 @@ RECOMMENDED_FOR_G0BurpSQLmaPI:[SQLmap](https://github.com/nu11secur1ty/sqlmap-nu
 go run .\G0BurpSQLmaPI.go
 ```
 
-DEMO:[soon]()
+[Demo](https://www.youtube.com/watch?v=PCyHeFP_gKI)
