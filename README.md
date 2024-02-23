@@ -42,4 +42,7 @@ ORIGINAL_SOURCE:[SQLmap](https://github.com/sqlmapproject/sqlmap)
 3. Execute the program `G0BurpSQLmaPI.py`
 - - `python .\G0BurpSQLmaPI.py`
 
+### Colored Framework-Advanced-Auto for Windows 11:
+[visit]()
+
 [Demo](https://www.youtube.com/watch?v=PCyHeFP_gKI)
