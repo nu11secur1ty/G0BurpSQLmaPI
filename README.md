@@ -4,6 +4,11 @@ The G0BurpSQLmaPI is a powerful Penetration Testing application for SQLi vulnera
 This application uses the latest Python3.x, etc. The users can modify their exploits and many more.
 There will never be a number version! This is very important to know, dear all. You can redistribute this software by following the strict rules!!!
 
+### NOTE:
+This software is not for `beginners` or people who are not in the IT sector!
+- Do not blame me dear all, who don't understand anything of it! This is YOUR PROBLEM!
+- KR @nu11secur1ty
+
 
 ![](https://github.com/nu11secur1ty/G0BurpSQLmaPI/blob/main/Docs/G0BurpSQLmaPI.png)
 
