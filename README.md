@@ -6,7 +6,7 @@ There will never be a number version! This is very important to know, dear all. 
 
 ![](https://github.com/nu11secur1ty/G0BurpSQLmaPI/blob/main/Docs/G0BurpSQLmaPI.png)
 
-### Usage:
+### INFO:
 - For all OS's that support: Python, GOlang, Sqlmap + [Burp Suite](https://portswigger.net/burp/releases#professional)
 
 - Need to install 
@@ -25,7 +25,8 @@ ORIGINAL_SOURCE:[SQLmap](https://github.com/sqlmapproject/sqlmap)
 - - - ### RECOMMENDED_FOR_G0BurpSQLmaPI:
     - [SQLmap](https://github.com/nu11secur1ty/sqlmap-nu11secur1ty)
 
-- Exploitation:
+### USAGE:
+
 1. Add your vulnerable POST or GET request from Burp Suite
 2. Generate your `exploit.txt`
 - - `go run .\generatePoC.go`
