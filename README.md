@@ -15,7 +15,10 @@ This software is not for `beginners` or people who are not in the IT sector!
 ### INFO:
 - For all OS's that support: Python, GOlang, Sqlmap + [Burp Suite](https://portswigger.net/burp/releases#professional)
 
-- Need to install 
+- Need to install
+
+Burp Suite:
+[Burp Suite](https://portswigger.net/burp/releases#professional)
 
 Python:
 [Python](https://www.python.org/)
