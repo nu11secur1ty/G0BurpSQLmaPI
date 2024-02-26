@@ -4,6 +4,9 @@
 - Need to install 
 
 Python:
+
+[Burp Suite](https://portswigger.net/burp/releases#professional)
+
 [Python](https://www.python.org/)
 
 GOlang:
