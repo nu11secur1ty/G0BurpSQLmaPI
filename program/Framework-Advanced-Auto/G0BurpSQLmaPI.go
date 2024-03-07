@@ -55,7 +55,7 @@ func main() {
     }
 
     go copyOutput(stdout)
-	go copyOutput(stderr)
+    go copyOutput(stderr)
 	
     cmd.Wait()
     // Start Color
