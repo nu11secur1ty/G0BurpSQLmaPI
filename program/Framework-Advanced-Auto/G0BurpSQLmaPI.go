@@ -23,7 +23,6 @@ func main() {
 // The start of your POST or GET or whatever VULNERABLE request...
     val := `Put_your_code_here`
 // The end of your POST or GET or whatever VULNERABLE request...
-	
     data := []byte(val)
 
     _, err2 := f.Write(data)
@@ -31,12 +30,15 @@ func main() {
     if err2 != nil {
         log.Fatal(err2)
     }
-		fmt.Println("done..The PoC was created, and the exploit will be continuing...")
+	
+	fmt.Println("done..The PoC was created, and the exploit will be continuing...")
      
     // Start Color
     cBlue := "\033[34m"
     fmt.Println(cBlue)
     // End Color
+    
+    //Execute G0BurpSQLmaPI.py
     cmd := exec.Command("python", "G0BurpSQLmaPI.py", "--input-file", "documents/doc.png")
     stdout, err := cmd.StdoutPipe()
     if err != nil {
@@ -59,6 +61,10 @@ func main() {
     cWhite := "\033[37m"
     fmt.Println(cWhite)
     // End Color
+    //End of Execution of G0BurpSQLmaPI.py
+    // WARNING!
+    fmt.Println("WARNING: If you want to clean your request, please execute: go run executor.go")
+    os.Exit(0)
 }
 
 func copyOutput(r io.Reader) {
