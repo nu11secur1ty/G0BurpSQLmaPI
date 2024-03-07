@@ -23,6 +23,7 @@ func main() {
 // The start of your POST or GET or whatever VULNERABLE request...
     val := `Put_your_code_here`
 // The end of your POST or GET or whatever VULNERABLE request...
+	
     data := []byte(val)
 
     _, err2 := f.Write(data)
