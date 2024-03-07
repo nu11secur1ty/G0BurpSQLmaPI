@@ -1,4 +1,4 @@
-// Remove the evidences
+// Remove the evidence
 package main 
    
 import ( 
