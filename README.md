@@ -42,8 +42,6 @@ ORIGINAL_SOURCE:[SQLmap](https://github.com/sqlmapproject/sqlmap)
 1. Add your vulnerable POST or GET request from Burp Suite
 2. Generate your `exploit.txt`
 - - `go run .\generatePoC.go`
-  - 
-### Manually:
 3. Execute the program `G0BurpSQLmaPI.py`
 - - `python .\G0BurpSQLmaPI.py`
 
