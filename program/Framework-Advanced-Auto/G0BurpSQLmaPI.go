@@ -64,7 +64,7 @@ func main() {
     // End Color
     //End of Execution of G0BurpSQLmaPI.py
     // WARNING!
-    fmt.Println("WARNING: If you want to clean your request, please execute: go run executor.go")
+    fmt.Println("WARNING: Your exploit request will be deleted!")
     os.Exit(0)
 }
 
