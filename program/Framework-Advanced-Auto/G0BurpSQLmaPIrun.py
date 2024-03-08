@@ -1,4 +1,5 @@
 #!/usr/bin/python
+# nu11secur1ty 2023-2024
 import os
 import time
 
