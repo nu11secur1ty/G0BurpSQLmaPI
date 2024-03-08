@@ -37,7 +37,7 @@ ORIGINAL_SOURCE:[SQLmap](https://github.com/sqlmapproject/sqlmap)
 ### WARNING:
 `DO NOT DO THIS WITHOUT PERMISSION! ALL ACTIONS FROM YOUR SIDE ARE ABSOLUTELY, YOUR RESPONSIBILITY IN FRONT OF THE LAW!`
 
-### USAGE:
+### MANUAL USAGE:
 
 1. Add your vulnerable POST or GET request from Burp Suite
 2. Generate your `exploit.txt`
