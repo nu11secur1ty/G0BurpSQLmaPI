@@ -1,4 +1,5 @@
-// Remove the evidence
+// Golang program to illustrate how to  
+// remove files from the default directory 
 package main 
    
 import ( 
