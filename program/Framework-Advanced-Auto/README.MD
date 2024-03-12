@@ -1,4 +1,4 @@
-### Colored Framework-Advanced-Auto for Windows 11 
+### Automation Framework-Advanced-Auto for Linux + Windows 11 
 - NOTE: For advanced users!
 ```python
 python G0BurpSQLmaPIrun.py
