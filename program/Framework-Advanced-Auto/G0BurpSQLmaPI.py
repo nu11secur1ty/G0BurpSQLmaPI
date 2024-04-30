@@ -8,10 +8,7 @@ import requests
 
 #evidence=os.system("del exploit.txt")
 print("The PoC process will be continue...\n")
-time.sleep(5)
-
-# Environment
-os.system('cd D:\\CVE\\sqlmap-nu11secur1ty\\')
+time.sleep(3)
 
 # Parameter
 print(Fore.GREEN +"Put your special parameter for attacking here, or just press Enter...\n")
