@@ -6,7 +6,6 @@ from colorama import init, Fore, Back, Style
 init(convert=True)
 import requests
 
-#evidence=os.system("del exploit.txt")
 print("The PoC process will be continue...\n")
 time.sleep(3)
 
