@@ -11,8 +11,7 @@ time.sleep(3)
 
 # Parameter
 print(Fore.GREEN +"Put your special parameter for attacking here, or just press Enter...\n")
-param = '-p'
-param_spec = param + input()
+param_spec = input()
 print(Style.RESET_ALL)
 
 # Here you can modify your OWN injection construction!
