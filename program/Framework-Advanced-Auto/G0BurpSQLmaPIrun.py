@@ -5,12 +5,17 @@ from colorama import init, Fore, Back, Style
 init(convert=True)
 
 def display_menu():
-    print(Fore.YELLOW +"===== G0BurpSQLmaPI Menu =====")
-    print("1. Generate PoC")
-    print("2. Start PyG0BurpSQLmaPI")
-    print("3. Clean")
-    print("4. Exit")
-print(Style.RESET_ALL)
+    print(Fore.BLUE +"===== G0BurpSQLmaPI Menu =====")
+    print(Style.RESET_ALL)
+    print(Fore.GREEN +"1. Generate PoC")
+    print(Style.RESET_ALL)
+    print(Fore.GREEN +"2. Start PyG0BurpSQLmaPI")
+    print(Style.RESET_ALL)
+    print(Fore.GREEN +"3. Clean")
+    print(Style.RESET_ALL)
+    print(Fore.GREEN +"4. Exit")
+    print(Style.RESET_ALL)
+
 
 def execute_command(choice):
     if choice == '1':
