@@ -11,6 +11,9 @@ time.sleep(3)
 
 # Parameter
 print(Fore.GREEN +"Put your special parameter for attacking here, or just press Enter...\n")
+print(Style.RESET_ALL)
+
+print(Fore.RED)
 param_spec = input()
 print(Style.RESET_ALL)
 
