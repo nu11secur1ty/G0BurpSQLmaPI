@@ -10,7 +10,7 @@ print("The PoC process will be continue...\n")
 time.sleep(3)
 
 # Parameter
-print(Fore.GREEN +"Put your special parameter for attacking here, or press Enter to quit the program...\n")
+print(Fore.GREEN +"Put your special parameter for attacking here, or press Enter to return to the menu...\n")
 print(Style.RESET_ALL)
 
 print(Fore.RED)
