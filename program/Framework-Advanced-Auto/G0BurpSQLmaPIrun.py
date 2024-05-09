@@ -9,7 +9,7 @@ def display_menu():
     print(Style.RESET_ALL)
     print(Fore.GREEN +"1. Generate PoC")
     print(Style.RESET_ALL)
-    print(Fore.GREEN +"2. Start PyG0BurpSQLmaPI")
+    print(Fore.GREEN +"2. Start G0BurpSQLmaPI")
     print(Style.RESET_ALL)
     print(Fore.GREEN +"3. Clean")
     print(Style.RESET_ALL)
