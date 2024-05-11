@@ -49,3 +49,6 @@ ORIGINAL_SOURCE:[SQLmap](https://github.com/sqlmapproject/sqlmap)
 [visit](https://github.com/nu11secur1ty/G0BurpSQLmaPI/tree/main/program/Framework-Advanced-Auto)
 
 [Demo](https://www.youtube.com/watch?v=PCyHeFP_gKI)
+
+### G0BurpSQLmaPI-PRO-24.3.1.4
+[Demo](https://www.youtube.com/watch?v=w3co6tvUhWw)
