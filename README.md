@@ -1,11 +1,11 @@
 ### G0BurpSQLmaPI ♾️ by nu11secur1ty
 -----------------------------------------------------------------------------------------
 
-*OS's support:* Kali Linux latest, Ubuntu latest, Windows 10, 11
+***OS's support:*** Kali Linux latest, Ubuntu latest, Windows 10, 11
 
-*Python support:* latest
+***Python support:*** latest
 
-*GO support:* latest
+***GO support:*** latest
 
 -----------------------------------------------------------------------------------------
 
