@@ -1,4 +1,11 @@
 ### G0BurpSQLmaPI ♾️ by nu11secur1ty
+-----------------------------------------------------------------------------------------
+
+*OS's support:* Kali Linux latest, Ubuntu latest, Windows 10, 11
+*Python support:* latest
+*GO support:* latest
+
+-----------------------------------------------------------------------------------------
 
 The G0BurpSQLmaPI is a powerful Penetration Testing application for SQLi vulnerabilities detected by [Burp Suite Professional](https://portswigger.net/burp/releases#professional).
 This application uses the latest Python3.x, etc. The users can modify their exploits and many more.
