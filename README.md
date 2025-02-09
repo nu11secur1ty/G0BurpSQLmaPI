@@ -60,5 +60,5 @@ ORIGINAL_SOURCE:[SQLmap](https://github.com/sqlmapproject/sqlmap)
 
 [Demo](https://www.youtube.com/watch?v=PCyHeFP_gKI)
 
-### G0BurpSQLmaPI-PRO-24.3.1.4
+### G0BurpSQLmaPI-PRO-2025.1
 [Demo](https://www.youtube.com/watch?v=w3co6tvUhWw)
