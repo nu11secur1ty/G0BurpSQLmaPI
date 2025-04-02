@@ -11,7 +11,7 @@
 
 The G0BurpSQLmaPI is a powerful Penetration Testing application for SQLi vulnerabilities detected by [Burp Suite Professional](https://portswigger.net/burp/releases#professional).
 This application uses the latest Python3.x, etc. Users can modify their exploits and do many more things.
-NOTE: This software is for everyone but is generally for professional Penetration Testers!
+NOTE: This software is for everyone but is generally for `professional Penetration Testers`!
 You can redistribute this software by following the strict rules!!!
 
 ### NOTE:
