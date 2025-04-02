@@ -1,5 +1,5 @@
 #!/usr/bin/python
-# nu11secur1ty 2023-2024
+# nu11secur1ty 2023-2025
 import time
 import os
 from colorama import init, Fore, Back, Style
