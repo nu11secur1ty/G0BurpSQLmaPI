@@ -13,10 +13,6 @@ time.sleep(3)
 print(Fore.GREEN +"Press Enter to continue...\n")
 print(Style.RESET_ALL)
 
-print(Fore.RED)
-param_spec = input()
-print(Style.RESET_ALL)
-
 # Here you can modify your OWN injection construction!
 # Your EXPLOIT ENVIRONMENT 
 env = 'C:\\path\\path\\program'
