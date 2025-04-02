@@ -59,11 +59,6 @@ ORIGINAL_SOURCE:[SQLmap](https://github.com/sqlmapproject/sqlmap)
 ~3. Execute the program `G0BurpSQLmaPI.py`~
 
 ~- - `python .\G0BurpSQLmaPI.py`~
- 
-
-### Automation Framework-Advanced-Auto for Linux + Windows 11:
-
-[visit](https://github.com/nu11secur1ty/G0BurpSQLmaPI/tree/main/program/Framework-Advanced-Auto)
 
 - How To:
 
