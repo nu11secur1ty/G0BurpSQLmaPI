@@ -72,3 +72,13 @@ ORIGINAL_SOURCE:[SQLmap](https://github.com/sqlmapproject/sqlmap)
 ### G0BurpSQLmaPI-PRO-2025.1
 
 [Demo](https://www.youtube.com/watch?v=w3co6tvUhWw)
+
+### IMPORTANT: 
+
+ - - - ***If you want to learn more about `G0BurpSQLmaPI` and integrate it into your company or personally!***
+
+For corporate demos $5000 for 2 days.
+Includes all types of SQLi and examples of them.
+Demonstrations, installation, and customization.
+For public demos: $50 per person for an invitation to attend - ticket!
+Greetings to All
