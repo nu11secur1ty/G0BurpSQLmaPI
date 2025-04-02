@@ -66,8 +66,6 @@ ORIGINAL_SOURCE:[SQLmap](https://github.com/sqlmapproject/sqlmap)
 [visit](https://github.com/nu11secur1ty/G0BurpSQLmaPI/tree/main/program/Framework-Advanced-Auto)
 
 - How To:
-  
-[Demo](https://www.youtube.com/watch?v=PCyHeFP_gKI)
 
 ### G0BurpSQLmaPI-PRO-2025.1
 
