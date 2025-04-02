@@ -47,13 +47,15 @@ ORIGINAL_SOURCE:[SQLmap](https://github.com/sqlmapproject/sqlmap)
 ### WARNING:
 `DO NOT DO THIS WITHOUT PERMISSION! ALL ACTIONS FROM YOUR SIDE ARE ABSOLUTELY, YOUR RESPONSIBILITY IN FRONT OF THE LAW!`
 
-### MANUAL USAGE:
+### ~MANUAL USAGE~:
 
 1. Add your vulnerable POST or GET request from Burp Suite
 2. Generate your `exploit.txt`
 - - `go run .\generatePoC.go`
 3. Execute the program `G0BurpSQLmaPI.py`
 - - `python .\G0BurpSQLmaPI.py`
+ 
+  - - NOTE: The Manual version is `NOT SUPPORTED ANYMORE` Kr
 
 ### Automation Framework-Advanced-Auto for Linux + Windows 11:
 
