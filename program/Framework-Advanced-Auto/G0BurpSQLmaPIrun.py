@@ -13,6 +13,8 @@ def display_menu():
     print(Style.RESET_ALL)
     print(Fore.GREEN +"3. Start G0BurpSQLmaPIURLi")
     print(Style.RESET_ALL)
+    print(Fore.GREEN +"3.1. Start G0BurpSQLmaPIUser-Agent")
+    print(Style.RESET_ALL)
     print(Fore.GREEN +"4. Clean")
     print(Style.RESET_ALL)
     print(Fore.GREEN +"5. Exit")
@@ -26,6 +28,8 @@ def execute_command(choice):
         os.system("python G0BurpSQLmaPI.py")
     elif choice == '3':
         os.system("python modules/URLi.py")
+    elif choice == '3.1':
+        os.system("python modules/User-Agent.py")
     elif choice == '4':
         os.system("go run executor.go")
         print("Done: you've cleaned the evidence!")
