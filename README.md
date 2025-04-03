@@ -15,8 +15,8 @@ NOTE: This software is for everyone but is generally for `professional Penetrati
 You can redistribute this software by following the strict rules!!!
 
 ### NOTE:
-This software is not for `beginners` or people who are not in the IT sector!
-- Do not blame me dear all, who don't understand anything of it! This is [YOUR PROBLEM](https://www.youtube.com/watch?v=q291rwrDiCQ)!
+This software is not for `beginners` or people not in the IT sector!
+- Do not blame me, dear all, who don't understand anything about this software! This is [YOUR PROBLEM](https://www.youtube.com/watch?v=q291rwrDiCQ)!
 - KR @nu11secur1ty
 
 
