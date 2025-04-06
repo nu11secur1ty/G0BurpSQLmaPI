@@ -42,7 +42,7 @@ ORIGINAL_SOURCE:[SQLmap](https://github.com/sqlmapproject/sqlmap)
 --------------------------------------------------------------------------------------
 
 - - - ### RECOMMENDED_FOR_G0BurpSQLmaPI:
-    - [SQLmap](https://github.com/nu11secur1ty/sqlmap-nu11secur1ty)
+    - [nu11secur1ty-sqlmap](https://github.com/nu11secur1ty/sqlmap-nu11secur1ty)
 
 ### WARNING:
 `DO NOT DO THIS WITHOUT PERMISSION! ALL ACTIONS FROM YOUR SIDE ARE ABSOLUTELY YOUR RESPONSIBILITY IN FRONT OF THE LAW!`
