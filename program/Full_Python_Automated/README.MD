@@ -131,7 +131,7 @@ This project is released under the MIT License (or specify your license).
 
 - **Author:** nu11secur1ty  
 - **GitHub:** [https://github.com/nu11secur1ty](https://github.com/nu11secur1ty)  
-- **Email:** your-email@example.com (optional)
+- **Email:** 1@shm1uq@d3b3l.com (optional)
 
 ---
 
