@@ -22,7 +22,6 @@
 - Interactive and user-friendly CLI menu
 
 
-
 ## 🧰 Requirements
 
 - Python 3.x  
@@ -39,14 +38,15 @@ git clone https://github.com/nu11secur1ty/G0BurpSQLmaPI.git
 cd G0BurpSQLmaPI
 pip install colorama
 ```
-🧪 Usage
 
+🧪 Usage
 Start the tool from the main script:
 
 ```
 python G0BurpSQLmaPI.py
 ```
-You’ll see this menu:
+
+. You’ll see this menu:
 
 ```
 ===== G0BurpSQLmaPI Menu =====
@@ -60,10 +60,8 @@ You’ll see this menu:
 ```
 
 ✍️ Add Your Vulnerable POST/GET Request
-
-You’ll be prompted to paste your full vulnerable request (copied from Burp Suite or a proxy):
-
-Example POST:
+. You’ll be prompted to paste your full vulnerable request (copied from Burp Suite or a proxy):
+. Example POST:
 
 ```
 POST /vulnerable-path HTTP/1.1
@@ -100,7 +98,6 @@ Choose option 4 in the menu
 This will:
 
 . Delete exploit.txt from the main directory
-
 . Delete any leftover copies inside /modules
 
 
@@ -110,12 +107,8 @@ This will:
 
 
 👤 Author: nu11secur1ty
-
-
-🔗 GitHub: github.com/nu11secur1ty
-
-
-📧 Email: Ask for it on GitHub issues if needed
+. 🔗 GitHub: github.com/nu11secur1ty
+. 📧 Email: Ask for it on GitHub issues if needed
 
 
 ----------------------------------------------------------------------
