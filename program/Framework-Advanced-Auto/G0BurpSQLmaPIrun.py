@@ -2,6 +2,8 @@
 import os
 import time
 from colorama import init, Fore, Back, Style
+import sys
+
 init(convert=True)
 
 def display_menu():
@@ -20,7 +22,6 @@ def display_menu():
     print(Fore.GREEN +"5. Exit")
     print(Style.RESET_ALL)
 
-
 def execute_command(choice):
     if choice == '1':
         os.system("go run G0BurpSQLmaPI.go")
@@ -37,11 +38,16 @@ def execute_command(choice):
         print("Exiting...")
     else:
         print("Invalid choice. Please select a valid option.")
+
 if __name__ == "__main__":
-    while True:
-        display_menu()
-        user_choice = input("Enter your choice: ")
-        execute_command(user_choice)
-        
-        if user_choice == '5':
-            break
+    try:
+        while True:
+            display_menu()
+            user_choice = input("Enter your choice: ")
+            execute_command(user_choice)
+
+            if user_choice == '5':
+                break
+    except KeyboardInterrupt:
+        # Clean exit on Ctrl+C without error messages
+        sys.exit(0)
