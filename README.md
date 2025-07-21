@@ -44,8 +44,8 @@ Burp Suite:
 Python:
 [Python](https://www.python.org/)
 
-GOlang:
-[GOlang](https://tip.golang.org/)
+~GOlang:~
+~[GOlang](https://tip.golang.org/)~
 
 SQLmap:
 ORIGINAL_SOURCE:[SQLmap](https://github.com/sqlmapproject/sqlmap)
