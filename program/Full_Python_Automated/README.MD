@@ -5,13 +5,13 @@
 **Language:** Python  
 **Purpose:** A tool to generate SQLi Proof-of-Concept requests, automate SQLMap attacks, and manage attack modules with ease.
 
----
+
 
 ## 🧠 Description
 
 **G0BurpSQLmaPI** is a command-line utility that simplifies the process of crafting and executing SQL injection (SQLi) Proof-of-Concept (PoC) attacks using [sqlmap](https://github.com/sqlmapproject/sqlmap). It helps automate advanced SQLMap commands, organize auxiliary modules, and manage evidence — all within an interactive menu.
 
----
+
 
 ## 🚀 Features
 
@@ -21,7 +21,7 @@
 - Automatic cleanup of generated evidence
 - Interactive and user-friendly CLI menu
 
----
+
 
 ## 🧰 Requirements
 
@@ -31,7 +31,6 @@
 
 > ⚠️ Go is no longer required (Go modules deprecated as of v1.0).
 
----
 
 ## 📦 Installation
 
