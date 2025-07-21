@@ -27,7 +27,7 @@ G0BurpSQLmaPI is a command-line utility that simplifies the process of crafting 
 ## Requirements
 
 - Python 3.x  
-- Go installed and configured (for Go modules)  
+~- Go installed and configured (for Go modules)~  
 - `colorama` Python package  
 - sqlmap script located at your specified path (default: `D:\CVE\sqlmap-nu11secur1ty\sqlmap.py`)
 
