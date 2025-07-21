@@ -27,7 +27,7 @@ This software is not for `beginners` or people not in the IT sector!
 - KR @nu11secur1ty
 
 
-[![](https://github.com/nu11secur1ty/G0BurpSQLmaPI/blob/main/Docs/G0BurpSQLmaPI.png)](https://youtu.be/w3co6tvUhWw?si=zeXZqAYqxhSGJ-bh)
+[![](/Docs/G0BurpSQLmaPI.png)](https://youtu.be/w3co6tvUhWw?si=zeXZqAYqxhSGJ-bh)
 
 ### INFO:
 - For all OS's that support: Python, GOlang, Sqlmap + [Burp Suite](https://portswigger.net/burp/releases#professional)
