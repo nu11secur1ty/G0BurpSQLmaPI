@@ -46,7 +46,7 @@ Start the tool from the main script:
 python G0BurpSQLmaPI.py
 ```
 
-. You’ll see this menu:
+- You’ll see this menu:
 
 ```
 ===== G0BurpSQLmaPI Menu =====
@@ -60,8 +60,8 @@ python G0BurpSQLmaPI.py
 ```
 
 ✍️ Add Your Vulnerable POST/GET Request
-. You’ll be prompted to paste your full vulnerable request (copied from Burp Suite or a proxy):
-. Example POST:
+- You’ll be prompted to paste your full vulnerable request (copied from Burp Suite or a proxy):
+- Example POST:
 
 ```
 POST /vulnerable-path HTTP/1.1
@@ -79,9 +79,8 @@ After pasting, exploit.txt will be created automatically and copied to the /modu
 
 If you do not paste a valid POST or GET request, the tool will:
 
-. Print a red error
-
-. Exit automatically to protect you from misuse
+- Print a red error
+- Exit automatically to protect you from misuse
 
 ✅ Make sure you provide a real, formatted request when prompted.
 
@@ -97,8 +96,8 @@ Choose option 4 in the menu
 
 This will:
 
-. Delete exploit.txt from the main directory
-. Delete any leftover copies inside /modules
+- Delete exploit.txt from the main directory
+- Delete any leftover copies inside /modules
 
 
 📜 License
@@ -107,8 +106,8 @@ This will:
 
 
 👤 Author: nu11secur1ty
-. 🔗 GitHub: github.com/nu11secur1ty
-. 📧 Email: Ask for it on GitHub issues if needed
+- 🔗 GitHub: github.com/nu11secur1ty
+- 📧 Email: Ask for it on GitHub issues if needed
 
 
 ----------------------------------------------------------------------
