@@ -106,14 +106,15 @@ This will:
 
 
 👤 Author: nu11secur1ty
+
 - 🔗 GitHub: github.com/nu11secur1ty
 - 📧 Email: Ask for it on GitHub issues if needed
-
 
 ----------------------------------------------------------------------
 
 
 ☠️ Legal Disclaimer
+
 - This tool is intended for educational and authorized testing only.
 - Unauthorized use is illegal and unethical.
 - The author assumes no responsibility for damage or misuse.
