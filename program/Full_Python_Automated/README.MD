@@ -39,10 +39,11 @@
 git clone https://github.com/nu11secur1ty/G0BurpSQLmaPI.git
 cd G0BurpSQLmaPI
 pip install colorama
-
+```
 🧪 Usage
 
 Start the tool from the main script:
+
 ```
 python G0BurpSQLmaPI.py
 ```
