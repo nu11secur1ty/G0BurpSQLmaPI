@@ -107,10 +107,12 @@ This will:
 
 📜 License
 
+
 👤 Author
 nu11secur1ty
 🔗 GitHub: github.com/nu11secur1ty
 📧 Email: Ask for it on GitHub issues if needed
+
 
 
 ☠️ Legal Disclaimer
