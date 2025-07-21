@@ -33,30 +33,33 @@ def create_exploit_file():
 
     payload = "\n".join(lines).strip()
 
-    if not (payload.startswith("POST") or payload.startswith("GET")):
+    if not (payload.upper().startswith("POST") or payload.upper().startswith("GET")):
         print(Fore.RED + "❌ ERROR: Payload must start with POST or GET request. Returning to menu..." + Style.RESET_ALL)
         time.sleep(2)
         return
 
-    # Ask for vulnerable parameter(s)
     vuln_params = input(Fore.CYAN + "Enter vulnerable parameter(s) (comma separated if multiple): " + Style.RESET_ALL).strip()
     if not vuln_params:
         print(Fore.YELLOW + "No vulnerable parameter provided. Returning to menu..." + Style.RESET_ALL)
         time.sleep(2)
         return
+
     vuln_params_list = [p.strip() for p in vuln_params.split(',') if p.strip()]
     print(Fore.GREEN + f"Vulnerable parameters set: {vuln_params_list}" + Style.RESET_ALL)
 
-    # Save payload to exploit.txt
-    env = os.path.join(os.getcwd(), "modules")
-    if not os.path.exists(env):
-        os.makedirs(env)
-    exploit_path = os.path.join(env, "exploit.txt")
+    # Paths for saving
+    current_path = os.path.join(os.getcwd(), "exploit.txt")
+    modules_path = os.path.join(os.getcwd(), "modules", "exploit.txt")
+
+    # Ensure modules directory exists
+    os.makedirs(os.path.dirname(modules_path), exist_ok=True)
 
     try:
-        with open(exploit_path, "w", encoding="utf-8") as f:
+        with open(current_path, "w", encoding="utf-8") as f:
             f.write(payload)
-        print(Fore.GREEN + f"✅ PoC payload saved to '{exploit_path}'" + Style.RESET_ALL)
+        with open(modules_path, "w", encoding="utf-8") as f:
+            f.write(payload)
+        print(Fore.GREEN + f"✅ PoC payload saved to '{current_path}' and '{modules_path}'" + Style.RESET_ALL)
     except Exception as e:
         print(Fore.RED + f"❌ Failed to write exploit file: {e}" + Style.RESET_ALL)
 
@@ -64,18 +67,17 @@ def create_exploit_file():
     time.sleep(2)
 
 def run_sqlmap():
-    env = os.path.join(os.getcwd(), "modules")
-    exploit_path = os.path.join(env, "exploit.txt")
+    modules_path = os.path.join(os.getcwd(), "modules", "exploit.txt")
 
-    if not os.path.isfile(exploit_path):
-        print(Fore.RED + f"❌ ERROR: '{exploit_path}' not found. Please generate PoC first." + Style.RESET_ALL)
+    if not os.path.isfile(modules_path):
+        print(Fore.RED + f"❌ ERROR: '{modules_path}' not found. Please generate PoC first." + Style.RESET_ALL)
         time.sleep(2)
         return
 
-    sqlmap_path = r"D:\CVE\sqlmap-nu11secur1ty\sqlmap.py"  # Adjust if needed
+    sqlmap_path = r"D:\CVE\sqlmap-nu11secur1ty\sqlmap.py"  # Adjust path if needed
 
     cmd = (
-        f'python "{sqlmap_path}" -r "{exploit_path}" --tamper=space2comment '
+        f'python "{sqlmap_path}" -r "{modules_path}" --tamper=space2comment '
         '--dbms=mysql --time-sec=7 --random-agent --level=5 --risk=3 '
         '--batch --answers="crack=Y,dict=Y,continue=Y,quit=N" --dump'
     )
@@ -95,20 +97,23 @@ def run_module(module_path):
     print(Fore.RED + "\nHappy hunting with nu11secur1ty =)" + Style.RESET_ALL)
 
 def clean_up():
-    env = os.path.join(os.getcwd(), "modules")
-    exploit_path = os.path.join(env, "exploit.txt")
-    deleted = False
+    deleted_any = False
+    targets = [
+        os.path.join(os.getcwd(), "exploit.txt"),
+        os.path.join(os.getcwd(), "modules", "exploit.txt")
+    ]
 
-    try:
-        if os.path.isfile(exploit_path):
-            os.remove(exploit_path)
-            print(Fore.GREEN + "🧹 'exploit.txt' has been deleted." + Style.RESET_ALL)
-            deleted = True
-    except Exception as e:
-        print(Fore.RED + f"❌ ERROR deleting 'exploit.txt': {e}" + Style.RESET_ALL)
+    for path in targets:
+        if os.path.isfile(path):
+            try:
+                os.remove(path)
+                print(Fore.GREEN + f"🧹 Deleted: {path}" + Style.RESET_ALL)
+                deleted_any = True
+            except Exception as e:
+                print(Fore.RED + f"❌ ERROR deleting '{path}': {e}" + Style.RESET_ALL)
 
-    if not deleted:
-        print(Fore.YELLOW + "No 'exploit.txt' file found to delete." + Style.RESET_ALL)
+    if not deleted_any:
+        print(Fore.YELLOW + "⚠️ No 'exploit.txt' files found to delete." + Style.RESET_ALL)
 
     time.sleep(2)
 
