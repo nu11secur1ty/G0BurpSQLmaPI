@@ -123,7 +123,7 @@ Option 4 in the menu deletes the generated `exploit.txt` file to remove evidence
 
 ## License
 
-This project is released under the MIT License (AFL-3.0).
+This project is released under the [License](https://github.com/nu11secur1ty/G0BurpSQLmaPI/blob/master/LICENSE).
 
 ---
 
