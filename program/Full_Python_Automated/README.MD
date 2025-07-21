@@ -112,10 +112,11 @@ This will:
 
 ----------------------------------------------------------------------
 
+
 ☠️ Legal Disclaimer
-    - This tool is intended for educational and authorized testing only.
-    - Unauthorized use is illegal and unethical.
-    - The author assumes no responsibility for damage or misuse.
+- This tool is intended for educational and authorized testing only.
+- Unauthorized use is illegal and unethical.
+- The author assumes no responsibility for damage or misuse.
 
 
 Happy Hacking — Responsibly. 🧠🔍
