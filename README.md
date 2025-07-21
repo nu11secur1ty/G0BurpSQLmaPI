@@ -1,4 +1,9 @@
 ### G0BurpSQLmaPI by nu11secur1ty
+
+
+### Full Automated Python Version - Enjoy ;)
+[G0BurpSQLmaPI](https://github.com/nu11secur1ty/G0BurpSQLmaPI/tree/master/program/Full_Python_Automated)
+
 -----------------------------------------------------------------------------------------
 
 ***OS's support:*** Kali Linux latest, Ubuntu latest, Windows 10 - 11
