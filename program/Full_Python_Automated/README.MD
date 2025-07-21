@@ -123,7 +123,7 @@ Option 4 in the menu deletes the generated `exploit.txt` file to remove evidence
 
 ## License
 
-This project is released under the MIT License (or specify your license).
+This project is released under the MIT License (AFL-3.0).
 
 ---
 
