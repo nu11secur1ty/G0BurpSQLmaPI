@@ -8,13 +8,13 @@ from colorama import init, Fore, Style
 init(convert=True)
 
 def display_menu():
-    print(Fore.CYAN + Style.BRIGHT + "\n===== G0BurpSQLmaPI Menu =====\n" + Style.RESET_ALL)
-    print(Fore.GREEN + "1." + Fore.YELLOW + " Generate PoC exploit.txt")
-    print(Fore.GREEN + "2." + Fore.YELLOW + " Start SQLi with sqlmap")
-    print(Fore.GREEN + "3." + Fore.YELLOW + " Start G0BurpSQLmaPIURLi (module)")
-    print(Fore.GREEN + "3.1" + Fore.YELLOW + " Start G0BurpSQLmaPIUser-Agent (module)")
-    print(Fore.GREEN + "4." + Fore.YELLOW + " Clean evidence (delete exploit.txt)")
-    print(Fore.GREEN + "5." + Fore.YELLOW + " Exit\n")
+    print(Fore.CYAN + "\n===== G0BurpSQLmaPI Menu =====\n" + Style.RESET_ALL)
+    print("1. Generate PoC exploit.txt")
+    print("2. Start SQLi with sqlmap")
+    print("3. Start G0BurpSQLmaPIURLi (module)")
+    print("3.1 Start G0BurpSQLmaPIUser-Agent (module)")
+    print("4. Clean evidence (delete exploit.txt)")
+    print("5. Exit\n")
 
 def create_exploit_file():
     print(Fore.GREEN + "Paste your full POST or GET request below (must start with POST or GET).")
@@ -28,16 +28,24 @@ def create_exploit_file():
             time.sleep(1)
             return
         if line.strip() == '.':
-            # Single dot '.' means end of input
             break
         lines.append(line)
 
     payload = "\n".join(lines).strip()
 
-    if not (payload.upper().startswith("POST") or payload.upper().startswith("GET")):
+    if not (payload.startswith("POST") or payload.startswith("GET")):
         print(Fore.RED + "❌ ERROR: Payload must start with POST or GET request. Returning to menu..." + Style.RESET_ALL)
         time.sleep(2)
         return
+
+    # Ask for vulnerable parameter(s)
+    vuln_params = input(Fore.CYAN + "Enter vulnerable parameter(s) (comma separated if multiple): " + Style.RESET_ALL).strip()
+    if not vuln_params:
+        print(Fore.YELLOW + "No vulnerable parameter provided. Returning to menu..." + Style.RESET_ALL)
+        time.sleep(2)
+        return
+    vuln_params_list = [p.strip() for p in vuln_params.split(',') if p.strip()]
+    print(Fore.GREEN + f"Vulnerable parameters set: {vuln_params_list}" + Style.RESET_ALL)
 
     # Save payload to exploit.txt
     env = os.path.join(os.getcwd(), "modules")
@@ -75,7 +83,6 @@ def run_sqlmap():
     print(Fore.YELLOW + "\n[+] Starting sqlmap with your exploit file...\n" + Style.RESET_ALL)
     os.system(cmd)
     print(Fore.RED + "\nHappy hunting with nu11secur1ty =)" + Style.RESET_ALL)
-    time.sleep(2)
 
 def run_module(module_path):
     if not os.path.isfile(module_path):
@@ -86,7 +93,6 @@ def run_module(module_path):
     print(Fore.YELLOW + f"\n[+] Running module {os.path.basename(module_path)}...\n" + Style.RESET_ALL)
     os.system(f'python "{module_path}"')
     print(Fore.RED + "\nHappy hunting with nu11secur1ty =)" + Style.RESET_ALL)
-    time.sleep(2)
 
 def clean_up():
     env = os.path.join(os.getcwd(), "modules")
