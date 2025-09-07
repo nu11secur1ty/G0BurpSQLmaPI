@@ -58,12 +58,14 @@ def generate_variants(word: str):
     variants.add(w + "\r\n")
     return variants
 
+# Word check for normal hashes
 def check_word(word, target_hash, hash_type, salt=""):
     for variant in generate_variants(word):
         if hash_text(variant, hash_type, salt) == target_hash:
             return variant
     return None
 
+# Word check for bcrypt hashes
 def check_bcrypt(word, target_hash):
     for variant in generate_variants(word):
         try:
@@ -73,10 +75,33 @@ def check_bcrypt(word, target_hash):
             continue
     return None
 
-def crack_hash_parallel(target_hash: str, hash_type: str, wordlist_path: str = WORDLIST, salt: str = ""):
+# Auto-detect hash type
+def detect_hash_type(target_hash):
+    target_hash = target_hash.strip()
+    if target_hash.startswith(("$2a$", "$2b$", "$2y$")):
+        return "bcrypt"
+    length = len(target_hash)
+    if length == 32 and all(c in "0123456789abcdefABCDEF" for c in target_hash):
+        return "md5"
+    if length == 40 and all(c in "0123456789abcdefABCDEF" for c in target_hash):
+        return "sha1"
+    if length == 64 and all(c in "0123456789abcdefABCDEF" for c in target_hash):
+        return "sha256"
+    if length == 128 and all(c in "0123456789abcdefABCDEF" for c in target_hash):
+        return "sha512"
+    if length == 32:
+        return "mysql_old"  # old MySQL password
+    return None  # fallback
+
+# Parallel hash cracking
+def crack_hash_parallel(target_hash: str, hash_type: str = None, wordlist_path: str = WORDLIST, salt: str = ""):
     if not os.path.exists(wordlist_path):
         print(f"{Colors.RED}[-] Wordlist not found: {wordlist_path}{Colors.END}")
         return None
+
+    if hash_type is None:
+        detected = detect_hash_type(target_hash)
+        hash_type = detected if detected else "md5"
 
     print(f"{Colors.CYAN}[i] Using wordlist: {wordlist_path}{Colors.END}")
     print(f"{Colors.CYAN}[i] Hash type: {hash_type.upper()}{Colors.END}")
@@ -86,37 +111,43 @@ def crack_hash_parallel(target_hash: str, hash_type: str, wordlist_path: str = W
     with open(wordlist_path, "r", encoding="utf-8", errors="ignore") as f:
         words = [line.strip() for line in f]
 
-    executor = ThreadPoolExecutor(max_workers=THREADS)
     try:
         if hash_type == "bcrypt":
-            futures = [executor.submit(check_bcrypt, w, target_hash) for w in words]
+            # Bcrypt is CPU heavy, single-threaded
+            for word in words:
+                result = check_bcrypt(word, target_hash)
+                if result:
+                    print(f"{Colors.GREEN}[+] Found match: {repr(result)}{Colors.END}")
+                    return result
         else:
+            executor = ThreadPoolExecutor(max_workers=THREADS)
             futures = [executor.submit(check_word, w, target_hash, hash_type, salt) for w in words]
 
-        while futures:
-            done, not_done = as_completed(futures, timeout=0.1), []
-            for future in done:
-                try:
-                    result = future.result(timeout=0.1)
-                    if result:
-                        print(f"{Colors.GREEN}[+] Found match: {repr(result)}{Colors.END}")
-                        executor.shutdown(wait=False, cancel_futures=True)
-                        return result
-                except TimeoutError:
-                    not_done.append(future)
-            futures = list(not_done)
-
+            while futures:
+                done, not_done = as_completed(futures, timeout=0.1), []
+                for future in done:
+                    try:
+                        result = future.result(timeout=0.1)
+                        if result:
+                            print(f"{Colors.GREEN}[+] Found match: {repr(result)}{Colors.END}")
+                            executor.shutdown(wait=False, cancel_futures=True)
+                            return result
+                    except TimeoutError:
+                        not_done.append(future)
+                futures = list(not_done)
     except KeyboardInterrupt:
-        print(f"\n{Colors.WARNING}[!] Interrupted by user. Shutting down threads...{Colors.END}")
-        executor.shutdown(wait=False, cancel_futures=True)
+        print(f"\n{Colors.WARNING}[!] Interrupted by user. Shutting down...{Colors.END}")
+        if hash_type != "bcrypt":
+            executor.shutdown(wait=False, cancel_futures=True)
         sys.exit(0)
     finally:
-        executor.shutdown(wait=False, cancel_futures=True)
+        if hash_type != "bcrypt":
+            executor.shutdown(wait=False, cancel_futures=True)
 
     print(f"{Colors.RED}[-] No match found in the wordlist (with variants).{Colors.END}")
     return None
 
-# Colorized menu
+# Main menu
 def main_menu():
     try:
         print(f"{Colors.HEADER}{Colors.BOLD}=== Wordlist Hash Cracker ==={Colors.END}")
@@ -126,7 +157,7 @@ def main_menu():
         print(f"{Colors.BLUE}4.{Colors.END} SHA-512")
         print(f"{Colors.BLUE}5.{Colors.END} MySQL OLD_PASSWORD()")
         print(f"{Colors.BLUE}6.{Colors.END} Bcrypt")
-        choice = input("Choose hash type (1-6): ").strip()
+        choice = input("Choose hash type (1-6, leave empty for auto-detect): ").strip()
 
         mapping = {
             "1": "md5",
@@ -137,8 +168,8 @@ def main_menu():
             "6": "bcrypt"
         }
 
-        hash_type = mapping.get(choice, "md5")
-        target_hash = input(f"Enter {hash_type.upper()} hash to crack: ").strip()
+        hash_type = mapping.get(choice) if choice else None
+        target_hash = input(f"Enter hash to crack: ").strip()
         salt = ""
         if hash_type not in ["md5", "sha1", "sha256", "sha512", "bcrypt"]:
             salt = input("Enter salt (leave empty if none): ").strip()
