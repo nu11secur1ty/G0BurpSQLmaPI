@@ -6,6 +6,12 @@ import os
 import sys
 from concurrent.futures import ThreadPoolExecutor, as_completed, TimeoutError
 
+try:
+    import bcrypt
+except ImportError:
+    print("bcrypt module not found. Install with: pip install bcrypt")
+    sys.exit(1)
+
 # Wordlist and threading
 WORDLIST = os.path.join(os.path.dirname(__file__), "HashCracker_wordlist/nu11secur1ty.txt")
 THREADS = 8  # adjust for your CPU
@@ -21,7 +27,7 @@ class Colors:
     END = '\033[0m'
     BOLD = '\033[1m'
 
-# Hashing function
+# Hashing function for MD5/SHA/MySQL
 def hash_text(word: str, hash_type: str, salt: str = "") -> str:
     text = (salt + word).encode("utf-8")
     hash_type = hash_type.lower()
@@ -58,6 +64,15 @@ def check_word(word, target_hash, hash_type, salt=""):
             return variant
     return None
 
+def check_bcrypt(word, target_hash):
+    for variant in generate_variants(word):
+        try:
+            if bcrypt.checkpw(variant.encode('utf-8'), target_hash.encode('utf-8')):
+                return variant
+        except ValueError:
+            continue
+    return None
+
 def crack_hash_parallel(target_hash: str, hash_type: str, wordlist_path: str = WORDLIST, salt: str = ""):
     if not os.path.exists(wordlist_path):
         print(f"{Colors.RED}[-] Wordlist not found: {wordlist_path}{Colors.END}")
@@ -72,9 +87,12 @@ def crack_hash_parallel(target_hash: str, hash_type: str, wordlist_path: str = W
         words = [line.strip() for line in f]
 
     executor = ThreadPoolExecutor(max_workers=THREADS)
-    futures = [executor.submit(check_word, w, target_hash, hash_type, salt) for w in words]
-
     try:
+        if hash_type == "bcrypt":
+            futures = [executor.submit(check_bcrypt, w, target_hash) for w in words]
+        else:
+            futures = [executor.submit(check_word, w, target_hash, hash_type, salt) for w in words]
+
         while futures:
             done, not_done = as_completed(futures, timeout=0.1), []
             for future in done:
@@ -87,6 +105,7 @@ def crack_hash_parallel(target_hash: str, hash_type: str, wordlist_path: str = W
                 except TimeoutError:
                     not_done.append(future)
             futures = list(not_done)
+
     except KeyboardInterrupt:
         print(f"\n{Colors.WARNING}[!] Interrupted by user. Shutting down threads...{Colors.END}")
         executor.shutdown(wait=False, cancel_futures=True)
@@ -106,20 +125,22 @@ def main_menu():
         print(f"{Colors.BLUE}3.{Colors.END} SHA-256")
         print(f"{Colors.BLUE}4.{Colors.END} SHA-512")
         print(f"{Colors.BLUE}5.{Colors.END} MySQL OLD_PASSWORD()")
-        choice = input("Choose hash type (1-5): ").strip()
+        print(f"{Colors.BLUE}6.{Colors.END} Bcrypt")
+        choice = input("Choose hash type (1-6): ").strip()
 
         mapping = {
             "1": "md5",
             "2": "sha1",
             "3": "sha256",
             "4": "sha512",
-            "5": "mysql_old"
+            "5": "mysql_old",
+            "6": "bcrypt"
         }
 
         hash_type = mapping.get(choice, "md5")
         target_hash = input(f"Enter {hash_type.upper()} hash to crack: ").strip()
         salt = ""
-        if hash_type not in ["md5", "sha1", "sha256", "sha512"]:
+        if hash_type not in ["md5", "sha1", "sha256", "sha512", "bcrypt"]:
             salt = input("Enter salt (leave empty if none): ").strip()
 
         crack_hash_parallel(target_hash, hash_type, WORDLIST, salt)
