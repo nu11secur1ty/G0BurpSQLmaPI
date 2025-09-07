@@ -1,132 +1,144 @@
+
 # G0BurpSQLmaPI
 
 **Author:** nu11secur1ty  
 **Years:** 2023–2025  
-**Language:** Python  
+**Language:** Python (with Go modules)  
 **Purpose:** A tool to generate SQLi Proof-of-Concept requests, automate SQLMap attacks, and manage attack modules with ease.
 
-------------------------------------------------------------
+---
 
-## 🧠 Description
+## Description
 
-G0BurpSQLmaPI is a command-line utility that simplifies the process of crafting and executing SQL injection (SQLi) Proof-of-Concept (PoC) attacks using sqlmap.  
-It helps automate advanced SQLMap commands, organize auxiliary modules, and manage evidence — all within an interactive menu.
+G0BurpSQLmaPI is a command-line utility that simplifies the process of crafting and executing SQL injection Proof-of-Concept (PoC) attacks using sqlmap. It combines Go and Python modules to generate exploit requests, launch SQLMap with advanced parameters, and manage auxiliary attack scripts.
 
-------------------------------------------------------------
+---
 
-## 🚀 Features
+## Features
 
-- Generate custom SQLi PoC payload files (`exploit.txt`)  
-- Launch `sqlmap` with advanced options automatically  
-- Run modular attack scripts (e.g. URLi, User-Agent)  
-- Automatic cleanup of generated evidence  
-- Interactive and user-friendly CLI menu  
+- Generate custom SQLi PoC payload files (`exploit.txt`).
+- Launch sqlmap with tailored command-line options.
+- Run modular attack scripts like `URLi` and `User-Agent`.
+- Clean up generated exploit files to avoid leaving traces.
+- Interactive menu for easy workflow control.
 
-------------------------------------------------------------
+---
 
-## 🧰 Requirements
+## Requirements
 
 - Python 3.x  
+- Go installed and configured (for Go modules)  
 - `colorama` Python package  
-- `sqlmap.py` script (adjustable path in config)  
+- sqlmap script located at your specified path (default: `D:\CVE\sqlmap-nu11secur1ty\sqlmap.py`)
 
-> ⚠️ Go is no longer required (Go modules deprecated as of v1.0).
+---
 
-------------------------------------------------------------
+## Installation
 
-## 📦 Installation
+1. **Clone the repository:**
 
-1. Clone the repo:  
-    `git clone https://github.com/nu11secur1ty/G0BurpSQLmaPI.git`
+   ```bash
+   git clone https://github.com/nu11secur1ty/G0BurpSQLmaPI.git
+   cd G0BurpSQLmaPI
+   ```
 
-2. Change directory:  
-    `cd G0BurpSQLmaPI`
+2. **Install Python dependencies:**
 
-3. Install colorama package:  
-    `pip install colorama`
+   ```bash
+   pip install colorama
+   ```
 
-------------------------------------------------------------
+3. Ensure Go is installed and in your system PATH.
 
-## 🧪 Usage
+4. Verify your `sqlmap.py` path in the Python script (`G0BurpSQLmaPI.py`) and adjust it if needed.
 
-Run the tool:  
-`python G0BurpSQLmaPI.py`
+---
 
-You will see this menu:
+## Usage
+
+Run the main Python program:
+
+```bash
+python G0BurpSQLmaPI.py
+```
+
+You will see a menu:
 
 ```
 ===== G0BurpSQLmaPI Menu =====
 
-Generate PoC exploit.txt
-
-Start SQLi with sqlmap
-
-Start G0BurpSQLmaPIURLi (module)
+1. Generate PoC exploit.txt
+2. Start SQLi with sqlmap
+3. Start G0BurpSQLmaPIURLi (module)
 3.1 Start G0BurpSQLmaPIUser-Agent (module)
-
-Clean evidence (delete exploit.txt)
+4. Clean evidence (delete exploit.txt)
+5. Exit
 ```
 
+Choose an option by typing the corresponding number or sub-number.
 
+---
 
-------------------------------------------------------------
+## How to add your POST/GET request
 
-## ✍️ Add Your Vulnerable POST/GET Request
+1. Open `G0BurpSQLmaPI.py` in a text editor.
 
-- When choosing "Generate PoC exploit.txt", you will be prompted to paste your full vulnerable HTTP request (copied from Burp Suite or a proxy).
+2. Locate the function `create_exploit_file()`.
 
-Example POST request:
+3. Replace the placeholder text inside the triple quotes:
 
-```
-POST /vulnerable-path HTTP/1.1
-Host: target.com
+   ```python
+   payload = """Your_POST_Request_here!"""
+   ```
+
+   with your full HTTP POST or GET request payload exactly as you want it.
+
+**Example:**
+
+```python
+payload = """POST /your/target/path HTTP/1.1
+Host: vulnerablehost.com
 Content-Type: application/x-www-form-urlencoded
 
-username=admin&password=pass
+username=admin&password=pass"""
 ```
 
+4. Save the file.
 
-- After pasting, `exploit.txt` will be created automatically and saved inside the `/modules` folder.
+---
 
-------------------------------------------------------------
+## IMPORTANT WARNING
 
-## ⚠️ WARNING
+⚠️ Do **not** run this program without setting a valid POST or GET request payload in the PoC generator function.
 
-If you do not paste a valid POST or GET request, the tool will:
+The program includes a safety check — if the payload string is empty or unchanged from the placeholder, the program will warn you and quit immediately to prevent accidental execution.
 
-- Print an error message in red  
-- Exit automatically to protect you from misuse  
+---
 
-✅ Make sure to provide a real, properly formatted request when prompted.
+## Cleaning up
 
-------------------------------------------------------------
+Option 4 in the menu deletes the generated `exploit.txt` file to remove evidence of your test payload.
 
-## 🧼 Clean Up
+---
 
-To securely remove traces after testing, choose "Clean evidence (delete exploit.txt)" from the menu.
+## License
 
-This will:
+This project is released under the MIT License (or specify your license).
 
-- Delete `exploit.txt` from the `/modules` directory
+---
 
-------------------------------------------------------------
+## Contact
 
-## 📜 License
+- **Author:** nu11secur1ty  
+- **GitHub:** [https://github.com/nu11secur1ty](https://github.com/nu11secur1ty)  
+- **Email:** your-email@example.com (optional)
 
-------------------------------------------------------------
+---
 
-**👤 Author:** nu11secur1ty  
+## Disclaimer
 
-- 🔗 GitHub: github.com/nu11secur1ty  
-- 📧 Email: Ask for it on GitHub issues if needed
+This tool is intended solely for authorized security testing and educational purposes.  
+Unauthorized use is illegal and unethical. Use responsibly and with explicit permission.  
+The author assumes no responsibility for misuse or damage caused by this software.
 
-------------------------------------------------------------
-
-## ☠️ Legal Disclaimer
-
-- This tool is intended for educational and authorized testing only.  
-- Unauthorized use is illegal and unethical.  
-- The author assumes no responsibility for damage or misuse.
-
-Happy Hacking — Responsibly. 🧠🔍
-
+Enjoy hacking responsibly! ☠️

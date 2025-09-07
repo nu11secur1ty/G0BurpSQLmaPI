@@ -13,6 +13,7 @@ def display_menu():
     print("2. Start SQLi with sqlmap")
     print("3. Start G0BurpSQLmaPIURLi (module)")
     print("3.1 Start G0BurpSQLmaPIUser-Agent (module)")
+    print("3.2 Start HashCracker (module)")
     print("4. Clean evidence (delete exploit.txt)")
     print("5. Exit\n")
 
@@ -118,7 +119,7 @@ def clean_up():
     time.sleep(2)
 
 def main():
-    valid_choices = {'1', '2', '3', '3.1', '4', '5'}
+    valid_choices = {'1', '2', '3', '3.1', '3.2', '4', '5'}
 
     try:
         while True:
@@ -138,6 +139,8 @@ def main():
                 run_module(os.path.join("modules", "URLi.py"))
             elif choice == '3.1':
                 run_module(os.path.join("modules", "User-Agent.py"))
+            elif choice == '3.2':
+                run_module(os.path.join("modules", "HashCracker.py"))  # launch your password cracker
             elif choice == '4':
                 clean_up()
             elif choice == '5':
