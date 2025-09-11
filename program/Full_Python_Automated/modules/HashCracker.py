@@ -4,6 +4,7 @@
 import hashlib
 import os
 import sys
+from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor, as_completed, TimeoutError
 
 try:
@@ -15,6 +16,7 @@ except ImportError:
 # Wordlist and threading
 WORDLIST = os.path.join(os.path.dirname(__file__), "HashCracker_wordlist/nu11secur1ty.txt")
 THREADS = 8  # adjust for your CPU
+CRACKED_FILE = os.path.join(os.path.dirname(__file__), "cracked_hashes.txt")
 
 # ANSI color codes
 class Colors:
@@ -27,7 +29,7 @@ class Colors:
     END = '\033[0m'
     BOLD = '\033[1m'
 
-# Hashing function for MD5/SHA/MySQL
+# Hashing function
 def hash_text(word: str, hash_type: str, salt: str = "") -> str:
     text = (salt + word).encode("utf-8")
     hash_type = hash_type.lower()
@@ -58,14 +60,14 @@ def generate_variants(word: str):
     variants.add(w + "\r\n")
     return variants
 
-# Word check for normal hashes
+# Word check
 def check_word(word, target_hash, hash_type, salt=""):
     for variant in generate_variants(word):
         if hash_text(variant, hash_type, salt) == target_hash:
             return variant
     return None
 
-# Word check for bcrypt hashes
+# Bcrypt check
 def check_bcrypt(word, target_hash):
     for variant in generate_variants(word):
         try:
@@ -75,13 +77,13 @@ def check_bcrypt(word, target_hash):
             continue
     return None
 
-# Save cracked password
-def save_cracked(target_hash, plaintext, hash_type):
-    output_file = os.path.join(os.path.dirname(__file__), "cracked_hashes.txt")
+# Save cracked password with timestamp and optional source
+def save_cracked(target_hash, plaintext, hash_type, source="local"):
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     try:
-        with open(output_file, "a", encoding="utf-8") as f:
-            f.write(f"{hash_type.upper()} | {target_hash} | {plaintext}\n")
-        print(f"{Colors.GREEN}[i] Saved cracked password to '{output_file}'{Colors.END}")
+        with open(CRACKED_FILE, "a", encoding="utf-8") as f:
+            f.write(f"[{timestamp}] [{source}] {hash_type.upper()} | {target_hash} | {plaintext}\n")
+        print(f"{Colors.GREEN}[i] Saved cracked password to '{CRACKED_FILE}'{Colors.END}")
     except Exception as e:
         print(f"{Colors.RED}[!] Failed to save cracked password: {e}{Colors.END}")
 
@@ -101,10 +103,10 @@ def detect_hash_type(target_hash):
         return "sha512"
     if length == 32:
         return "mysql_old"
-    return None  # fallback
+    return None
 
 # Parallel hash cracking
-def crack_hash_parallel(target_hash: str, hash_type: str = None, wordlist_path: str = WORDLIST, salt: str = ""):
+def crack_hash_parallel(target_hash: str, hash_type: str = None, wordlist_path: str = WORDLIST, salt: str = "", source: str = "local"):
     if not os.path.exists(wordlist_path):
         print(f"{Colors.RED}[-] Wordlist not found: {wordlist_path}{Colors.END}")
         return None
@@ -123,12 +125,11 @@ def crack_hash_parallel(target_hash: str, hash_type: str = None, wordlist_path: 
 
     try:
         if hash_type == "bcrypt":
-            # Bcrypt is CPU heavy, single-threaded
             for word in words:
                 result = check_bcrypt(word, target_hash)
                 if result:
                     print(f"{Colors.GREEN}[+] Found match: {repr(result)}{Colors.END}")
-                    save_cracked(target_hash, result, hash_type)
+                    save_cracked(target_hash, result, hash_type, source)
                     return result
         else:
             executor = ThreadPoolExecutor(max_workers=THREADS)
@@ -141,7 +142,7 @@ def crack_hash_parallel(target_hash: str, hash_type: str = None, wordlist_path: 
                         result = future.result(timeout=0.1)
                         if result:
                             print(f"{Colors.GREEN}[+] Found match: {repr(result)}{Colors.END}")
-                            save_cracked(target_hash, result, hash_type)
+                            save_cracked(target_hash, result, hash_type, source)
                             executor.shutdown(wait=False, cancel_futures=True)
                             return result
                     except TimeoutError:
@@ -187,7 +188,9 @@ def main_menu():
         if hash_type not in ["md5", "sha1", "sha256", "sha512", "bcrypt"]:
             salt = input("Enter salt (leave empty if none): ").strip()
 
-        crack_hash_parallel(target_hash, hash_type, WORDLIST, salt)
+        source = input("Enter optional source/host info (or leave empty): ").strip() or "local"
+
+        crack_hash_parallel(target_hash, hash_type, WORDLIST, salt, source)
     except KeyboardInterrupt:
         print(f"\n{Colors.WARNING}[!] Exiting cleanly...{Colors.END}")
         sys.exit(0)
