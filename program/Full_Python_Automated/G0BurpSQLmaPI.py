@@ -1,12 +1,15 @@
 #!/usr/bin/env python3
 # G0BurpSQLmaPI by nu11secur1ty 2023–2025
+# Fully upgraded
 
 import os
 import sys
 import time
 from colorama import init, Fore, Style
 init(convert=True)
+import shlex
 
+# ================= Menu =================
 def display_menu():
     print(Fore.CYAN + "\n===== G0BurpSQLmaPI Menu =====\n" + Style.RESET_ALL)
     print("1. Generate PoC exploit.txt")
@@ -17,23 +20,27 @@ def display_menu():
     print("4. Clean evidence (delete exploit.txt)")
     print("5. Exit\n")
 
+# ================= PoC Creator =================
 def create_exploit_file():
     print(Fore.GREEN + "Paste your full POST or GET request below (must start with POST or GET).")
     print("Enter a single dot '.' on a new line to finish input or type 'exit' to cancel.\n" + Style.RESET_ALL)
 
     lines = []
-    while True:
-        line = input()
-        if line.lower() == 'exit':
-            print(Fore.YELLOW + "Cancelled PoC creation, returning to menu..." + Style.RESET_ALL)
-            time.sleep(1)
-            return
-        if line.strip() == '.':
-            break
-        lines.append(line)
+    try:
+        while True:
+            line = input()
+            if line.lower() == 'exit':
+                print(Fore.YELLOW + "Cancelled PoC creation, returning to menu..." + Style.RESET_ALL)
+                time.sleep(1)
+                return
+            if line.strip() == '.':
+                break
+            lines.append(line)
+    except KeyboardInterrupt:
+        print(Fore.RED + "\n[!] Ctrl+C detected. Returning to menu..." + Style.RESET_ALL)
+        return
 
     payload = "\n".join(lines).strip()
-
     if not (payload.upper().startswith("POST") or payload.upper().startswith("GET")):
         print(Fore.RED + "❌ ERROR: Payload must start with POST or GET request. Returning to menu..." + Style.RESET_ALL)
         time.sleep(2)
@@ -48,11 +55,9 @@ def create_exploit_file():
     vuln_params_list = [p.strip() for p in vuln_params.split(',') if p.strip()]
     print(Fore.GREEN + f"Vulnerable parameters set: {vuln_params_list}" + Style.RESET_ALL)
 
-    # Paths for saving
+    # Paths
     current_path = os.path.join(os.getcwd(), "exploit.txt")
     modules_path = os.path.join(os.getcwd(), "modules", "exploit.txt")
-
-    # Ensure modules directory exists
     os.makedirs(os.path.dirname(modules_path), exist_ok=True)
 
     try:
@@ -67,28 +72,32 @@ def create_exploit_file():
     print(Fore.YELLOW + "Waiting 2 seconds before returning to menu..." + Style.RESET_ALL)
     time.sleep(2)
 
+# ================= SQLMAP Runner =================
 def run_sqlmap():
     modules_path = os.path.join(os.getcwd(), "modules", "exploit.txt")
-
     if not os.path.isfile(modules_path):
         print(Fore.RED + f"❌ ERROR: '{modules_path}' not found. Please generate PoC first." + Style.RESET_ALL)
         time.sleep(2)
         return
 
     sqlmap_path = r"D:\CVE\sqlmap-nu11secur1ty\sqlmap.py"  # Adjust path if needed
+    safe_modules_path = shlex.quote(modules_path)
 
     cmd = (
-        f'python "{sqlmap_path}" -r "{modules_path}" --tamper="space2comment,apostrophemask,bypass" '
+        f'python "{sqlmap_path}" -r {safe_modules_path} '
+        '--tamper="space2comment,apostrophemask,bypass" '
         '--no-cast --no-escape '
         '--dbms=mysql --time-sec=11 --random-agent --level=5 --risk=3 '
         '--common-tables --common-columns --common-files '
-        '--batch --flush-session --technique=TBEUSQ --union-char=UCHAR --answers="crack=Y,dict=Y,continue=Y,quit=N" --dump-all'
+        '--batch --flush-session --technique=TBEUSQ --union-char=UCHAR '
+        '--answers="crack=Y,dict=Y,continue=Y,quit=N" --dump-all'
     )
 
     print(Fore.YELLOW + "\n[+] Starting sqlmap with your exploit file...\n" + Style.RESET_ALL)
     os.system(cmd)
     print(Fore.RED + "\nHappy hunting with nu11secur1ty =)" + Style.RESET_ALL)
 
+# ================= Module Runner =================
 def run_module(module_path):
     if not os.path.isfile(module_path):
         print(Fore.RED + f"❌ ERROR: Module '{module_path}' not found." + Style.RESET_ALL)
@@ -96,9 +105,13 @@ def run_module(module_path):
         return
 
     print(Fore.YELLOW + f"\n[+] Running module {os.path.basename(module_path)}...\n" + Style.RESET_ALL)
-    os.system(f'python "{module_path}"')
+    try:
+        os.system(f'python "{module_path}"')
+    except KeyboardInterrupt:
+        print(Fore.RED + "\n[!] Module interrupted by user." + Style.RESET_ALL)
     print(Fore.RED + "\nHappy hunting with nu11secur1ty =)" + Style.RESET_ALL)
 
+# ================= Cleanup =================
 def clean_up():
     deleted_any = False
     targets = [
@@ -117,12 +130,11 @@ def clean_up():
 
     if not deleted_any:
         print(Fore.YELLOW + "⚠️ No 'exploit.txt' files found to delete." + Style.RESET_ALL)
-
     time.sleep(2)
 
+# ================= Main Loop =================
 def main():
     valid_choices = {'1', '2', '3', '3.1', '3.2', '4', '5'}
-
     try:
         while True:
             display_menu()
@@ -142,7 +154,7 @@ def main():
             elif choice == '3.1':
                 run_module(os.path.join("modules", "User-Agent.py"))
             elif choice == '3.2':
-                run_module(os.path.join("modules", "HashCracker.py"))  # launch your password cracker
+                run_module(os.path.join("modules", "HashCracker.py"))  # Auto hash detection inside
             elif choice == '4':
                 clean_up()
             elif choice == '5':
@@ -152,7 +164,7 @@ def main():
             time.sleep(1)
 
     except KeyboardInterrupt:
-        print(Fore.RED + "\nInterrupted. Exiting cleanly." + Style.RESET_ALL)
+        print(Fore.RED + "\n[!] Ctrl+C detected. Exiting cleanly." + Style.RESET_ALL)
         sys.exit(0)
 
 if __name__ == "__main__":
