@@ -88,6 +88,7 @@ def run_sqlmap():
         'ifnull2casewhenisnull,if2case,htmlencode,hexentities,hex2char,halfversionedmorekeywords,greatest,escapequotes, '
         'equaltorlike,equaltolike,dunion,decentities,concat2concatws,commentbeforeparentheses,commalessmid,commalesslimit, '
         'charunicodeescape,charunicodeencode,charencode,chardoubleencode,bypass,bluecoat,binary,between" '
+        '--no-cast --no-escape '
         '--dbms=mysql --time-sec=11 --random-agent --level=5 --risk=3 '
         '--common-tables --common-columns --common-files '
         '--batch --flush-session --technique=TBEUSQ --union-char=UCHAR --answers="crack=Y,dict=Y,continue=Y,quit=N" --dump-all'
