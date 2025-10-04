@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
 # G0BurpSQLmaPI by nu11secur1ty 2023–2025
-# Fully upgraded
+# Fully upgraded — fixed sqlmap launching and module execution
 
 import os
 import sys
 import time
+import subprocess
+import shlex
 from colorama import init, Fore, Style
 init(convert=True)
-import shlex
 
 # ================= Menu =================
 def display_menu():
@@ -31,7 +32,7 @@ def create_exploit_file():
             line = input()
             if line.lower() == 'exit':
                 print(Fore.YELLOW + "Cancelled PoC creation, returning to menu..." + Style.RESET_ALL)
-                time.sleep(1)
+                time.sleep(3)
                 return
             if line.strip() == '.':
                 break
@@ -43,13 +44,13 @@ def create_exploit_file():
     payload = "\n".join(lines).strip()
     if not (payload.upper().startswith("POST") or payload.upper().startswith("GET")):
         print(Fore.RED + "❌ ERROR: Payload must start with POST or GET request. Returning to menu..." + Style.RESET_ALL)
-        time.sleep(2)
+        time.sleep(3)
         return
 
     vuln_params = input(Fore.CYAN + "Enter vulnerable parameter(s) (comma separated if multiple): " + Style.RESET_ALL).strip()
     if not vuln_params:
         print(Fore.YELLOW + "No vulnerable parameter provided. Returning to menu..." + Style.RESET_ALL)
-        time.sleep(2)
+        time.sleep(3)
         return
 
     vuln_params_list = [p.strip() for p in vuln_params.split(',') if p.strip()]
@@ -57,7 +58,8 @@ def create_exploit_file():
 
     # Paths
     current_path = os.path.join(os.getcwd(), "exploit.txt")
-    modules_path = os.path.join(os.getcwd(), "modules", "exploit.txt")
+    modules_dir = os.path.join(os.getcwd(), "modules")
+    modules_path = os.path.join(modules_dir, "exploit.txt")
     os.makedirs(os.path.dirname(modules_path), exist_ok=True)
 
     try:
@@ -69,46 +71,71 @@ def create_exploit_file():
     except Exception as e:
         print(Fore.RED + f"❌ Failed to write exploit file: {e}" + Style.RESET_ALL)
 
-    print(Fore.YELLOW + "Waiting 2 seconds before returning to menu..." + Style.RESET_ALL)
-    time.sleep(2)
+    print(Fore.YELLOW + "Waiting before returning to menu..." + Style.RESET_ALL)
+    time.sleep(5)
 
-# ================= SQLMAP Runner =================
+# ================= SQLMAP Runner (fixed) =================
 def run_sqlmap():
     modules_path = os.path.join(os.getcwd(), "modules", "exploit.txt")
     if not os.path.isfile(modules_path):
         print(Fore.RED + f"❌ ERROR: '{modules_path}' not found. Please generate PoC first." + Style.RESET_ALL)
-        time.sleep(2)
+        time.sleep(3)
         return
 
+    # Path to sqlmap script
     sqlmap_path = r"D:\CVE\sqlmap-nu11secur1ty\sqlmap.py"  # Adjust path if needed
-    safe_modules_path = shlex.quote(modules_path)
 
-    cmd = (
-        f'python "{sqlmap_path}" -r {safe_modules_path} '
-        '--tamper="space2comment,apostrophemask,bypass" '
-        '--no-cast --no-escape '
-        '--dbms=mysql --time-sec=11 --random-agent --level=5 --risk=3 '
-        '--common-tables --common-columns --common-files '
-        '--batch --flush-session --technique=TBEUSQ --union-char=UCHAR '
-        '--answers="crack=Y,dict=Y,continue=Y,quit=N" --dump-all'
-    )
+    if not os.path.isfile(sqlmap_path):
+        print(Fore.YELLOW + f"[!] Warning: sqlmap.py not found at '{sqlmap_path}'. Update sqlmap_path if needed." + Style.RESET_ALL)
 
+    # Build command as list to avoid shell quoting issues
+    args = [
+        sys.executable, sqlmap_path,
+        "-r", modules_path,
+        "--tamper=space2comment,apostrophemask,bypass",
+        "--no-cast", "--no-escape",
+        "--dbms=mysql",
+        "--time-sec=11",
+        "--random-agent",
+        "--level=5", "--risk=3",
+        "--common-tables", "--common-columns", "--common-files",
+        "--batch", "--flush-session",
+        "--technique=TBEUSQ",
+        "--union-char=UCHAR",
+        "--answers=crack=Y,dict=Y,continue=Y,quit=N",
+        "--dump-all"
+    ]
+
+    # Print command for debugging (safe)
     print(Fore.YELLOW + "\n[+] Starting sqlmap with your exploit file...\n" + Style.RESET_ALL)
-    os.system(cmd)
+    print(Fore.CYAN + "Command:" + Style.RESET_ALL, " ".join(shlex.quote(a) for a in args))
+
+    try:
+        # run and stream output to console (no shell)
+        subprocess.run(args, check=False)
+    except KeyboardInterrupt:
+        print(Fore.RED + "\n[!] sqlmap run interrupted by user." + Style.RESET_ALL)
+    except Exception as e:
+        print(Fore.RED + f"❌ Failed to launch sqlmap: {e}" + Style.RESET_ALL)
+
     print(Fore.RED + "\nHappy hunting with nu11secur1ty =)" + Style.RESET_ALL)
 
-# ================= Module Runner =================
+# ================= Module Runner (fixed) =================
 def run_module(module_path):
     if not os.path.isfile(module_path):
         print(Fore.RED + f"❌ ERROR: Module '{module_path}' not found." + Style.RESET_ALL)
-        time.sleep(2)
+        time.sleep(3)
         return
 
     print(Fore.YELLOW + f"\n[+] Running module {os.path.basename(module_path)}...\n" + Style.RESET_ALL)
     try:
-        os.system(f'python "{module_path}"')
+        # Use the same Python interpreter that runs this script
+        subprocess.run([sys.executable, module_path], check=False)
     except KeyboardInterrupt:
         print(Fore.RED + "\n[!] Module interrupted by user." + Style.RESET_ALL)
+    except Exception as e:
+        print(Fore.RED + f"❌ Failed to run module: {e}" + Style.RESET_ALL)
+
     print(Fore.RED + "\nHappy hunting with nu11secur1ty =)" + Style.RESET_ALL)
 
 # ================= Cleanup =================
@@ -130,7 +157,7 @@ def clean_up():
 
     if not deleted_any:
         print(Fore.YELLOW + "⚠️ No 'exploit.txt' files found to delete." + Style.RESET_ALL)
-    time.sleep(2)
+    time.sleep(3)
 
 # ================= Main Loop =================
 def main():
@@ -142,7 +169,7 @@ def main():
 
             if choice not in valid_choices:
                 print(Fore.RED + "❌ Invalid choice. Please enter a valid menu option number." + Style.RESET_ALL)
-                time.sleep(1)
+                time.sleep(3)
                 continue
 
             if choice == '1':
