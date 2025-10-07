@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # G0BurpSQLmaPI by nu11secur1ty 2023–2025
-# Fully upgraded — fixed sqlmap launching and module execution
+# Fully upgraded — sqlmap command hidden (no echo)
 
 import os
 import sys
@@ -74,7 +74,7 @@ def create_exploit_file():
     print(Fore.YELLOW + "Waiting before returning to menu..." + Style.RESET_ALL)
     time.sleep(5)
 
-# ================= SQLMAP Runner (fixed) =================
+# ================= SQLMAP Runner (quiet: no command echo) =================
 def run_sqlmap():
     modules_path = os.path.join(os.getcwd(), "modules", "exploit.txt")
     if not os.path.isfile(modules_path):
@@ -106,9 +106,8 @@ def run_sqlmap():
         "--dump-all"
     ]
 
-    # Print command for debugging (safe)
+    # Do NOT print the full command here (hidden by design)
     print(Fore.YELLOW + "\n[+] Starting sqlmap with your exploit file...\n" + Style.RESET_ALL)
-    print(Fore.CYAN + "Command:" + Style.RESET_ALL, " ".join(shlex.quote(a) for a in args))
 
     try:
         # run and stream output to console (no shell)
