@@ -1,10 +1,9 @@
-
 # G0BurpSQLmaPI
 
 **Author:** nu11secur1ty  
 **Years:** 2023–2025  
-**Language:** Python (with Go modules)  
-**Purpose:** A tool to generate SQLi Proof-of-Concept requests, automate SQLMap attacks, and manage attack modules with ease.
+**Language:** Python (with optional Go modules)  
+**Purpose:** Generate SQLi Proof-of-Concept requests, automate sqlmap attacks, and manage attack modules with ease.
 
 ---
 
@@ -29,7 +28,7 @@ G0BurpSQLmaPI is a command-line utility that simplifies the process of crafting 
 - Python 3.x  
 - Go installed and configured (for Go modules)  
 - `colorama` Python package  
-- sqlmap script located at your specified path (default: `D:\CVE\sqlmap-nu11secur1ty\sqlmap.py`)
+- sqlmap script located at your specified path (default: `D:\\CVE\\sqlmap-nu11secur1ty\\sqlmap.py`)
 
 ---
 
@@ -130,7 +129,7 @@ This project is released under the MIT License (or specify your license).
 ## Contact
 
 - **Author:** nu11secur1ty  
-- **GitHub:** [https://github.com/nu11secur1ty](https://github.com/nu11secur1ty)  
+- **GitHub:** https://github.com/nu11secur1ty  
 - **Email:** your-email@example.com (optional)
 
 ---
