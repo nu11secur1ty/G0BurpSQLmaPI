@@ -60,7 +60,7 @@ ORIGINAL_SOURCE:[SQLmap](https://github.com/sqlmapproject/sqlmap)
 
 - How To:
 
-### G0BurpSQLmaPI-PRO-2025.1
+### G0BurpSQLmaPI-PRO-2025.x.x
 
 [Demo](https://www.youtube.com/watch?v=w3co6tvUhWw)
 
