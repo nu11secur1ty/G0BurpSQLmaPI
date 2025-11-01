@@ -2,7 +2,7 @@
 
 ------------------------------------------------------------------------------------------
 
-### Full Automated Python Version G0BurpSQLmaPI-2025.08.2 - Enjoy ;)
+### Full Automated Python Version G0BurpSQLmaPI-2025.x.x - Enjoy ;)
 
 [G0BurpSQLmaPI](https://github.com/nu11secur1ty/G0BurpSQLmaPI/tree/master/program/Full_Python_Automated)
 
