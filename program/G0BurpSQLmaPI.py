@@ -11,9 +11,12 @@ import time
 import shutil
 import argparse
 import logging
+import subprocess
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
-import subprocess
+
+sys.path.append(os.path.join(os.path.dirname(__file__), "lib"))
+import settings
 
 try:
     from colorama import init, Fore, Style
@@ -23,6 +26,32 @@ except Exception:
         def __getattr__(self, _): return ""
     Fore = Style = _C()
 
+import requests
+
+# ============================
+# LOGO / BANNER
+# ============================
+LOGO = r"""
+           '| '|                         
+,---..   .  |  |,---.,---.,---..   .,---.  ||--- ,   .
+|   ||   |  |  |`---.|---'|    |   ||      ||    |   |
+`   '`---'  `  ``---'`---'`---'`---'`      ``---'`---|
+                                                 `---'
+"""
+
+BANNER = r"""
+╔═══════════════════════════════════════════════════════╗
+║    G0BurpSQLmaPI - polished CLI + metadata + logging  ║
+║    Author: nu11secur1ty | License: GPL-3.0            ║
+╚═══════════════════════════════════════════════════════╝
+"""
+
+print(Fore.CYAN + LOGO + Style.RESET_ALL)
+print(Fore.MAGENTA + BANNER + Style.RESET_ALL)
+
+# ============================
+# PATHS & CONSTANTS
+# ============================
 ROOT = Path.cwd()
 MODULES_DIR = ROOT / "modules"
 EXPLOIT_PATH = ROOT / "exploit.txt"
@@ -33,29 +62,33 @@ LOG_PATH = ROOT / "g0burpsqlmapi.log"
 DEFAULT_SQLMAP_ENV = "G0_SQLMAP_PATH"
 DEFAULT_SQLMAP_REL = Path("D:/CVE/sqlmap-nu11secur1ty/sqlmap.py")
 
-# Logging setup
+# ============================
+# LOGGING
+# ============================
 def setup_logging(verbose: bool = False):
     level = logging.DEBUG if verbose else logging.INFO
     logger = logging.getLogger("G0BurpSQLmaPI")
     logger.setLevel(level)
-    # Rotating file handler
+
     fh = RotatingFileHandler(LOG_PATH, maxBytes=2_000_000, backupCount=3, encoding="utf-8")
     fh.setLevel(level)
     fmt = logging.Formatter("%(asctime)s [%(levelname)s] %(message)s")
     fh.setFormatter(fmt)
     if not logger.handlers:
         logger.addHandler(fh)
-    # console handler
+
     ch = logging.StreamHandler(sys.stdout)
     ch.setLevel(level)
     ch.setFormatter(fmt)
-    # avoid duplicate stream handlers
     if not any(isinstance(h, logging.StreamHandler) for h in logger.handlers):
         logger.addHandler(ch)
     return logger
 
 logger = setup_logging(False)
 
+# ============================
+# UTILITIES
+# ============================
 def ensure_modules_dir():
     MODULES_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -77,32 +110,23 @@ def input_multiline(prompt=None):
         return None
     return "\n".join(lines).rstrip("\n")
 
-# --- Heuristics for auto-detecting parameters ---
+# ============================
+# PARAM DETECTION
+# ============================
 def detect_params_from_payload(payload: str):
-    """
-    Simple heuristics:
-    - parse query string params from the request line (GET /path?x=1&y=2)
-    - parse form-encoded body for name=value pairs
-    - parse patterns like 'name="..."' (rare)
-    Returns unique list preserving order.
-    """
     if not payload:
         return []
     params = []
     seen = set()
-
     lines = payload.splitlines()
     if not lines:
         return []
 
-    # Try first line (e.g., GET /path?x=1&y=2 HTTP/1.1)
+    # Query string
     first = lines[0]
-    # find query string
     m = re.search(r'^[A-Z]+\s+[^?\s]+\?([^ \t]+)', first)
     if m:
-        query = m.group(1)
-        # cut off HTTP version if present
-        query = query.split()[0]
+        query = m.group(1).split()[0]
         for pair in query.split('&'):
             if '=' in pair:
                 key = pair.split('=', 1)[0].strip()
@@ -110,16 +134,13 @@ def detect_params_from_payload(payload: str):
                     params.append(key)
                     seen.add(key)
 
-    # body heuristics — look for application/x-www-form-urlencoded like a=1&b=2
-    # body starts after a blank line
+    # Body heuristics
     try:
         blank_idx = lines.index('')
         body = "\n".join(lines[blank_idx+1:]).strip()
     except ValueError:
-        # no blank line, fall back to last line(s)
         body = lines[-1].strip()
 
-    # common form encoded
     for pair in re.split(r'[&\r\n]+', body):
         if '=' in pair:
             key = pair.split('=', 1)[0].strip()
@@ -127,17 +148,18 @@ def detect_params_from_payload(payload: str):
                 params.append(key)
                 seen.add(key)
 
-    # look for name="value" or name='value'
+    # name="value" patterns
     for match in re.finditer(r'([a-zA-Z0-9_\-\.]{1,50})\s*=\s*["\']', payload):
         key = match.group(1)
         if key and key not in seen:
             params.append(key)
             seen.add(key)
 
-    # final safety: limit to reasonable count
     return params[:50]
 
-# --- Core behaviors ---
+# ============================
+# EXPLOIT MANAGEMENT
+# ============================
 def create_exploit_file_interactive(logger):
     ensure_modules_dir()
     payload = input_multiline(Fore.GREEN + "Paste your full POST or GET request below (must start with POST or GET):")
@@ -145,7 +167,6 @@ def create_exploit_file_interactive(logger):
         logger.info("User cancelled PoC creation.")
         print(Fore.YELLOW + "Cancelled PoC creation, returning to menu..." + Style.RESET_ALL)
         return
-
     if not payload.strip():
         logger.warning("Empty payload submitted.")
         print(Fore.RED + "❌ ERROR: Empty payload. Returning to menu..." + Style.RESET_ALL)
@@ -157,7 +178,6 @@ def create_exploit_file_interactive(logger):
         print(Fore.RED + "❌ ERROR: Payload must start with POST or GET. Returning to menu..." + Style.RESET_ALL)
         return
 
-    # auto-detect params and prompt user to confirm / edit
     auto = detect_params_from_payload(payload)
     if auto:
         print(Fore.CYAN + f"[Auto-detected] potential params: {auto}" + Style.RESET_ALL)
@@ -165,15 +185,13 @@ def create_exploit_file_interactive(logger):
         if use_auto in ("", "y", "yes"):
             vuln_params_list = auto
         else:
-            vuln_params = input(Fore.CYAN + "Enter vulnerable parameter(s) (comma separated if multiple): " + Style.RESET_ALL).strip()
+            vuln_params = input(Fore.CYAN + "Enter vulnerable parameter(s) (comma separated): " + Style.RESET_ALL).strip()
             vuln_params_list = [p.strip() for p in vuln_params.split(",") if p.strip()] if vuln_params else []
     else:
-        vuln_params = input(Fore.CYAN + "Enter vulnerable parameter(s) (comma separated if multiple): " + Style.RESET_ALL).strip()
+        vuln_params = input(Fore.CYAN + "Enter vulnerable parameter(s) (comma separated): " + Style.RESET_ALL).strip()
         vuln_params_list = [p.strip() for p in vuln_params.split(",") if p.strip()] if vuln_params else []
 
-    header_lines = []
-    if vuln_params_list:
-        header_lines.append(f"# VULN_PARAMS: {','.join(vuln_params_list)}")
+    header_lines = [f"# VULN_PARAMS: {','.join(vuln_params_list)}"] if vuln_params_list else []
     header_lines.append(f"# Generated by G0BurpSQLmaPI - {time.strftime('%Y-%m-%dT%H:%M:%S')}")
     header = "\n".join(header_lines) + "\n\n"
 
@@ -196,6 +214,9 @@ def create_exploit_file_interactive(logger):
         logger.warning("Failed to save metadata: %s", e)
         print(Fore.YELLOW + f"⚠️ Failed to save metadata file: {e}" + Style.RESET_ALL)
 
+# ============================
+# SQLMAP MANAGEMENT
+# ============================
 def find_sqlmap():
     env_path = os.getenv(DEFAULT_SQLMAP_ENV)
     if env_path:
@@ -214,14 +235,13 @@ def run_sqlmap(logger):
     ensure_modules_dir()
     if not MODULES_EXPLOIT_PATH.exists():
         logger.error("exploit file missing for sqlmap")
-        print(Fore.RED + f"❌ ERROR: '{MODULES_EXPLOIT_PATH}' not found. Please generate PoC first." + Style.RESET_ALL)
+        print(Fore.RED + f"❌ ERROR: '{MODULES_EXPLOIT_PATH}' not found. Generate PoC first." + Style.RESET_ALL)
         return
 
     sqlmap_path = find_sqlmap()
     if not sqlmap_path:
         logger.error("sqlmap not found")
-        print(Fore.RED + "❌ ERROR: sqlmap not found. Install it or set the environment variable "
-                         f"'{DEFAULT_SQLMAP_ENV}' to the sqlmap path." + Style.RESET_ALL)
+        print(Fore.RED + f"❌ ERROR: sqlmap not found. Install or set '{DEFAULT_SQLMAP_ENV}'." + Style.RESET_ALL)
         return
 
     params_flag = []
@@ -231,18 +251,13 @@ def run_sqlmap(logger):
             vuln_params = meta.get("vuln_params") or []
             if vuln_params:
                 params_flag = ["-p", ",".join(vuln_params)]
-                logger.info("Using vulnerable params for sqlmap: %s", vuln_params)
-                print(Fore.GREEN + f"[+] Using vulnerable params for sqlmap: {vuln_params}" + Style.RESET_ALL)
+                logger.info("Using vulnerable params: %s", vuln_params)
+                print(Fore.GREEN + f"[+] Using vulnerable params: {vuln_params}" + Style.RESET_ALL)
         except Exception as e:
             logger.warning("Could not parse metadata: %s", e)
 
-    # Build cmd as list
-    if sqlmap_path.endswith(".py"):
-        cmd = [sys.executable, sqlmap_path]
-    else:
-        cmd = [sqlmap_path]
-    cmd += ["-r", str(MODULES_EXPLOIT_PATH)]
-    cmd += params_flag
+    cmd = [sys.executable, sqlmap_path] if sqlmap_path.endswith(".py") else [sqlmap_path]
+    cmd += ["-r", str(MODULES_EXPLOIT_PATH)] + params_flag
     cmd += [
         "--tamper=space2comment",
         "--dbms=mysql",
@@ -252,26 +267,29 @@ def run_sqlmap(logger):
         "--risk=3",
         "--batch",
         "--flush-session",
-        "--technique=BEUS",
+        "--technique=BEUSTQ",
         "--union-char=UCHAR",
         '--answers=crack=Y,dict=Y,continue=Y,quit=N',
-        "--dump",
+        "--dump"
     ]
 
     cmd = [c for c in cmd if c]
     logger.debug("Running sqlmap command: %s", " ".join(cmd))
-    print(Fore.YELLOW + "\n[+] Starting sqlmap with your exploit file (streaming output)..." + Style.RESET_ALL)
+    print(Fore.YELLOW + "\n[+] Starting sqlmap with exploit file..." + Style.RESET_ALL)
     try:
         subprocess.run(cmd, check=False)
     except KeyboardInterrupt:
-        logger.info("sqlmap run interrupted by user")
-        print(Fore.RED + "\nInterrupted sqlmap run by user." + Style.RESET_ALL)
+        logger.info("sqlmap interrupted by user")
+        print(Fore.RED + "\nInterrupted by user." + Style.RESET_ALL)
     except Exception as e:
         logger.exception("Failed to run sqlmap: %s", e)
         print(Fore.RED + f"❌ Failed to start sqlmap: {e}" + Style.RESET_ALL)
     finally:
         print(Fore.RED + "\nHappy hunting with nu11secur1ty =)\n" + Style.RESET_ALL)
 
+# ============================
+# MODULES
+# ============================
 def run_module(module_filename, logger):
     ensure_modules_dir()
     module_path = MODULES_DIR / module_filename
@@ -284,14 +302,17 @@ def run_module(module_filename, logger):
     try:
         subprocess.run([sys.executable, str(module_path)], check=False)
     except KeyboardInterrupt:
-        logger.info("Module run interrupted by user")
-        print(Fore.RED + "\nInterrupted module run by user." + Style.RESET_ALL)
+        logger.info("Module interrupted by user")
+        print(Fore.RED + "\nInterrupted by user." + Style.RESET_ALL)
     except Exception as e:
         logger.exception("Failed to run module: %s", e)
         print(Fore.RED + f"❌ Failed to run module: {e}" + Style.RESET_ALL)
     finally:
         print(Fore.RED + "\nModule finished. Happy hunting =)\n" + Style.RESET_ALL)
 
+# ============================
+# METADATA & CLEANUP
+# ============================
 def view_metadata():
     if not META_PATH.exists():
         print(Fore.YELLOW + "No metadata found. Generate PoC first." + Style.RESET_ALL)
@@ -323,7 +344,38 @@ def clean_up(logger):
     if not deleted_any:
         print(Fore.YELLOW + "⚠️ No exploit files or metadata found to delete." + Style.RESET_ALL)
 
-# --- Menu / CLI ---
+# ============================
+# GITHUB UPDATE CHECK
+# ============================
+def check_for_updates():
+    print("\n[+] Checking for updates on GitHub...")
+    try:
+        response = requests.get(settings.GITHUB_RAW_SETTINGS, timeout=10)
+        if response.status_code != 200:
+            print("[!] Could not connect to GitHub.")
+            return
+
+        latest_version = None
+        for line in response.text.splitlines():
+            if line.startswith("VERSION"):
+                latest_version = line.split("=")[1].strip().replace('"', "").replace("'", "")
+                break
+
+        print(f"[+] Installed version: {settings.VERSION}")
+        print(f"[+] Latest version:    {latest_version}")
+
+        if latest_version and latest_version != settings.VERSION:
+            print("\n🔥 UPDATE AVAILABLE!")
+            print(f"Run: git pull https://github.com/{settings.GITHUB_REPO}.git")
+        else:
+            print("✔ You are up-to-date!")
+
+    except Exception as e:
+        print("[ERROR] Update check failed:", str(e))
+
+# ============================
+# MENU
+# ============================
 def display_menu():
     print(Fore.CYAN + "\n===== G0BurpSQLmaPI Menu =====\n" + Style.RESET_ALL)
     print("1. Generate PoC (exploit.txt)")
@@ -333,18 +385,19 @@ def display_menu():
     print("5. Run module: modules/HashCracker.py")
     print("6. View metadata (modules/exploit_meta.json)")
     print("7. Clean evidence (delete exploit.txt and metadata)")
-    print("8. Exit\n")
+    print("8. Check for updates")
+    print("9. Exit\n")
 
 def interactive_main(verbose=False):
     global logger
     logger = setup_logging(verbose)
-    valid_choices = {str(i) for i in range(1, 9)}
+    valid_choices = {str(i) for i in range(1, 10)}
     try:
         while True:
             display_menu()
             choice = input(Fore.YELLOW + "Enter your choice: " + Style.RESET_ALL).strip()
             if choice not in valid_choices:
-                print(Fore.RED + "❌ Invalid choice. Please enter a valid menu option number." + Style.RESET_ALL)
+                print(Fore.RED + "❌ Invalid choice." + Style.RESET_ALL)
                 continue
             if choice == '1':
                 create_exploit_file_interactive(logger)
@@ -361,20 +414,26 @@ def interactive_main(verbose=False):
             elif choice == '7':
                 clean_up(logger)
             elif choice == '8':
+                check_for_updates()
+            elif choice == '9':
                 print(Fore.GREEN + "Exiting... Happy hunting ☠️" + Style.RESET_ALL)
                 break
     except KeyboardInterrupt:
         print(Fore.RED + "\nInterrupted. Exiting cleanly." + Style.RESET_ALL)
         sys.exit(0)
 
+# ============================
+# CLI
+# ============================
 def cli_main():
     parser = argparse.ArgumentParser(prog="G0BurpSQLmaPI", description="G0BurpSQLmaPI - polished CLI + menu")
     parser.add_argument("--create", action="store_true", help="Create PoC (interactive input)")
     parser.add_argument("--run-sqlmap", action="store_true", help="Run sqlmap using modules/exploit.txt")
     parser.add_argument("--module", type=str, help="Run a module (filename inside modules/)")
     parser.add_argument("--clean", action="store_true", help="Delete exploit files and metadata")
-    parser.add_argument("--view-meta", action="store_true", help="Print the metadata JSON")
-    parser.add_argument("--verbose", action="store_true", help="Verbose logging to log file and console")
+    parser.add_argument("--view-meta", action="store_true", help="Print metadata JSON")
+    parser.add_argument("--update", action="store_true", help="Check for updates on GitHub")
+    parser.add_argument("--verbose", action="store_true", help="Verbose logging")
     args = parser.parse_args()
 
     global logger
@@ -395,8 +454,10 @@ def cli_main():
     if args.view_meta:
         view_metadata()
         return
+    if args.update:
+        check_for_updates()
+        return
 
-    # default to interactive menu
     interactive_main(verbose=args.verbose)
 
 if __name__ == "__main__":
