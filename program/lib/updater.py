@@ -1,43 +1,66 @@
-# ============================================================
-#  updater.py — SAFE GITHUB VERSION CHECKER
-# ============================================================
-
 import requests
-from packaging import version
-from lib.settings import VERSION, GITHUB_RAW_SETTINGS
+import sys
+import os
 
-def check_for_update():
+# Local version (import your settings)
+try:
+    from program.lib.settings import VERSION
+except Exception:
+    VERSION = "0.0.0"
+
+
+# Correct GitHub RAW settings.py path
+GITHUB_RAW_SETTINGS = (
+    "https://raw.githubusercontent.com/"
+    "nu11secur1ty/G0BurpSQLmaPI/master/program/lib/settings.py"
+)
+
+
+def parse_version(text):
     """
-    Safe update checker.
-    - Reads remote settings.py
-    - Extracts VERSION string
-    - Compares with local VERSION
-    Does NOT download or execute anything.
+    Extract VERSION = "x.x.x" from the fetched file.
     """
-    print("[i] Checking for updates...")
+    for line in text.splitlines():
+        if line.strip().startswith("VERSION"):
+            try:
+                return line.split("=")[1].strip().replace('"', "").replace("'", "")
+            except Exception:
+                return None
+    return None
+
+
+def check_for_updates():
+    print("\n[+] Checking for updates on GitHub...")
 
     try:
-        response = requests.get(GITHUB_RAW_SETTINGS, timeout=5)
+        response = requests.get(GITHUB_RAW_SETTINGS, timeout=10)
+    except Exception:
+        print("[!] Could not connect to GitHub.")
+        return
 
-        if response.status_code != 200:
-            print("[!] GitHub returned an error.")
-            return
+    if response.status_code != 200:
+        print(f"[!] GitHub returned HTTP {response.status_code}")
+        return
 
-        remote_ver = None
-        for line in response.text.splitlines():
-            if line.startswith("VERSION"):
-                remote_ver = line.split("=")[1].strip().strip('"')
-                break
+    remote_text = response.text
+    remote_version = parse_version(remote_text)
 
-        if not remote_ver:
-            print("[!] Could not detect remote version.")
-            return
+    if not remote_version:
+        print("[!] Could not parse VERSION from GitHub file.")
+        return
 
-        if version.parse(remote_ver) > version.parse(VERSION):
-            print(f"[+] New version available: {remote_ver}")
-            print("[!] Please update manually from GitHub.")
-        else:
-            print(f"[✓] You are up to date ({VERSION}).")
+    print(f"[*] Local version : {VERSION}")
+    print(f"[*] Remote version: {remote_version}")
 
-    except Exception as e:
-        print(f"[!] Update check failed: {e}")
+    if remote_version.strip() == VERSION.strip():
+        print("[✓] You already have the latest version!")
+        return
+
+    print("\n[!] UPDATE AVAILABLE!")
+    print(f"    Your version: {VERSION}")
+    print(f"    New version:  {remote_version}")
+    print("    Update here → https://github.com/nu11secur1ty/G0BurpSQLmaPI\n")
+
+
+if __name__ == "__main__":
+    check_for_updates()
