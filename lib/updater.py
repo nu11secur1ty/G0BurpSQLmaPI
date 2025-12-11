@@ -1,51 +1,104 @@
 import os
-import ssl
-import urllib.request
+import sys
+import shutil
+import subprocess
+import requests
+from datetime import datetime
 
-RAW_SETTINGS_URL = "https://raw.githubusercontent.com/nu11secur1ty/G0BurpSQLmaPI/master/program/lib/settings.py"
-LOCAL_VERSION = "1.0.0"
+GITHUB_REPO = "https://api.github.com/repos/nu11secur1ty/G0BurpSQLmaPI"
+GIT_URL = "https://github.com/nu11secur1ty/G0BurpSQLmaPI.git"
+LOCAL_VERSION_FILE = "version.txt"
+
+
+def get_local_version():
+    if not os.path.exists(LOCAL_VERSION_FILE):
+        return "0.0.0"
+    with open(LOCAL_VERSION_FILE, "r") as f:
+        return f.read().strip()
+
+
+def get_remote_version():
+    try:
+        api = requests.get(GITHUB_REPO)
+        if api.status_code != 200:
+            return None
+        data = api.json()
+        return data.get("pushed_at", None)
+    except:
+        return None
+
+
+def write_local_version(version):
+    with open(LOCAL_VERSION_FILE, "w") as f:
+        f.write(version)
+
+
+def update_repository():
+    print("[+] Downloading newest update...")
+
+    # If the program itself is a git repo → git pull
+    if os.path.isdir(".git"):
+        try:
+            subprocess.run(["git", "pull"], check=True)
+            print("[+] Update completed using git pull.")
+            return True
+        except:
+            print("[!] git pull failed, falling back to full download...")
+
+    # Fallback: full repo download
+    TMP_DIR = "_update_tmp"
+
+    if os.path.exists(TMP_DIR):
+        shutil.rmtree(TMP_DIR)
+
+    try:
+        subprocess.run(["git", "clone", GIT_URL, TMP_DIR], check=True)
+    except Exception as e:
+        print(f"[!] Git clone failed: {e}")
+        return False
+
+    print("[+] Replacing files with repository content...")
+
+    # Copy everything except .git
+    for item in os.listdir(TMP_DIR):
+        if item == ".git":
+            continue
+        src = os.path.join(TMP_DIR, item)
+        dst = os.path.join(".", item)
+
+        if os.path.exists(dst):
+            if os.path.isfile(dst):
+                os.remove(dst)
+            else:
+                shutil.rmtree(dst)
+
+        shutil.move(src, dst)
+
+    shutil.rmtree(TMP_DIR)
+    print("[+] Update completed successfully.")
+    return True
 
 
 def check_for_updates():
-    print("[+] Checking for updates on GitHub...")
+    print("\n[+] Checking for updates on GitHub...")
 
-    try:
-        # Disable SSL validation (GitHub sometimes fails on proxies/tunnels)
-        ctx = ssl._create_unverified_context()
+    local = get_local_version()
+    remote = get_remote_version()
 
-        req = urllib.request.Request(
-            RAW_SETTINGS_URL,
-            headers={"User-Agent": "Mozilla/5.0"}
-        )
-
-        with urllib.request.urlopen(req, context=ctx, timeout=10) as response:
-            data = response.read().decode("utf-8")
-
-    except Exception as e:
-        print(f"[!] Could not connect to GitHub: {e}")
+    if remote is None:
+        print("[!] Could not connect to GitHub.")
         return
 
-    # Extract remote version
-    remote_version = None
-    for line in data.splitlines():
-        if "VERSION" in line and "=" in line:
-            remote_version = line.split("=")[1].strip().replace('"', "").replace("'", "")
-            break
-
-    if not remote_version:
-        print("[!] ERROR: Could not parse remote version!")
+    if local == remote:
+        print("[+] You already have the latest version.")
         return
 
-    print(f"[*] Local version:  {LOCAL_VERSION}")
-    print(f"[*] Remote version: {remote_version}")
+    print(f"[+] New version available: {remote}")
+    print("[+] Updating now...\n")
 
-    if remote_version == LOCAL_VERSION:
-        print("[✓] You already have the latest version.")
+    if update_repository():
+        write_local_version(remote)
+        print("[+] Updated to latest version!")
+        print("[+] Please restart G0BurpSQLmaPI.")
     else:
-        print("[!] UPDATE AVAILABLE!")
-        print("    > You must pull manually for now.")
-        print("    Repo: https://github.com/nu11secur1ty/G0BurpSQLmaPI")
-
-
-if __name__ == "__main__":
-    check_for_updates()
+        print("[!] Update failed.")
