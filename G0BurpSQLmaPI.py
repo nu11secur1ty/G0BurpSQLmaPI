@@ -347,31 +347,7 @@ def clean_up(logger):
 # ============================
 # GITHUB UPDATE CHECK
 # ============================
-def check_for_updates():
-    print("\n[+] Checking for updates on GitHub...")
-    try:
-        response = requests.get(settings.GITHUB_RAW_SETTINGS, timeout=10)
-        if response.status_code != 200:
-            print("[!] Could not connect to GitHub.")
-            return
-
-        latest_version = None
-        for line in response.text.splitlines():
-            if line.startswith("VERSION"):
-                latest_version = line.split("=")[1].strip().replace('"', "").replace("'", "")
-                break
-
-        print(f"[+] Installed version: {settings.VERSION}")
-        print(f"[+] Latest version:    {latest_version}")
-
-        if latest_version and latest_version != settings.VERSION:
-            print("\n🔥 UPDATE AVAILABLE!")
-            print(f"Run: git pull https://github.com/{settings.GITHUB_REPO}.git")
-        else:
-            print("✔ You are up-to-date!")
-
-    except Exception as e:
-        print("[ERROR] Update check failed:", str(e))
+# soon
 
 # ============================
 # MENU
@@ -385,8 +361,8 @@ def display_menu():
     print("5. Run module: modules/HashCracker.py")
     print("6. View metadata (modules/exploit_meta.json)")
     print("7. Clean evidence (delete exploit.txt and metadata)")
-    print("8. Check for updates")
-    print("9. Exit\n")
+    # print("8. Check for updates")
+    print("8. Exit\n")
 
 def interactive_main(verbose=False):
     global logger
@@ -413,9 +389,9 @@ def interactive_main(verbose=False):
                 view_metadata()
             elif choice == '7':
                 clean_up(logger)
+            #elif choice == '8':
+                #check_for_updates()
             elif choice == '8':
-                check_for_updates()
-            elif choice == '9':
                 print(Fore.GREEN + "Exiting... Happy hunting ☠️" + Style.RESET_ALL)
                 break
     except KeyboardInterrupt:
@@ -432,7 +408,7 @@ def cli_main():
     parser.add_argument("--module", type=str, help="Run a module (filename inside modules/)")
     parser.add_argument("--clean", action="store_true", help="Delete exploit files and metadata")
     parser.add_argument("--view-meta", action="store_true", help="Print metadata JSON")
-    parser.add_argument("--update", action="store_true", help="Check for updates on GitHub")
+    # parser.add_argument("--update", action="store_true", help="Check for updates on GitHub")
     parser.add_argument("--verbose", action="store_true", help="Verbose logging")
     args = parser.parse_args()
 
@@ -454,9 +430,9 @@ def cli_main():
     if args.view_meta:
         view_metadata()
         return
-    if args.update:
-        check_for_updates()
-        return
+    #if args.update:
+    #    check_for_updates()
+    #    return
 
     interactive_main(verbose=args.verbose)
 
