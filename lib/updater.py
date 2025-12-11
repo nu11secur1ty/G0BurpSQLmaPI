@@ -1,104 +1,97 @@
-import os
-import sys
-import shutil
-import subprocess
 import requests
-from datetime import datetime
+import os
+import shutil
 
-GITHUB_REPO = "https://api.github.com/repos/nu11secur1ty/G0BurpSQLmaPI"
-GIT_URL = "https://github.com/nu11secur1ty/G0BurpSQLmaPI.git"
-LOCAL_VERSION_FILE = "version.txt"
+# GitHub RAW URL for the FULL program directory
+GITHUB_ZIP = "https://github.com/nu11secur1ty/G0BurpSQLmaPI/archive/refs/heads/master.zip"
 
-
-def get_local_version():
-    if not os.path.exists(LOCAL_VERSION_FILE):
-        return "0.0.0"
-    with open(LOCAL_VERSION_FILE, "r") as f:
-        return f.read().strip()
-
-
-def get_remote_version():
-    try:
-        api = requests.get(GITHUB_REPO)
-        if api.status_code != 200:
-            return None
-        data = api.json()
-        return data.get("pushed_at", None)
-    except:
-        return None
-
-
-def write_local_version(version):
-    with open(LOCAL_VERSION_FILE, "w") as f:
-        f.write(version)
-
-
-def update_repository():
-    print("[+] Downloading newest update...")
-
-    # If the program itself is a git repo → git pull
-    if os.path.isdir(".git"):
-        try:
-            subprocess.run(["git", "pull"], check=True)
-            print("[+] Update completed using git pull.")
-            return True
-        except:
-            print("[!] git pull failed, falling back to full download...")
-
-    # Fallback: full repo download
-    TMP_DIR = "_update_tmp"
-
-    if os.path.exists(TMP_DIR):
-        shutil.rmtree(TMP_DIR)
-
-    try:
-        subprocess.run(["git", "clone", GIT_URL, TMP_DIR], check=True)
-    except Exception as e:
-        print(f"[!] Git clone failed: {e}")
-        return False
-
-    print("[+] Replacing files with repository content...")
-
-    # Copy everything except .git
-    for item in os.listdir(TMP_DIR):
-        if item == ".git":
-            continue
-        src = os.path.join(TMP_DIR, item)
-        dst = os.path.join(".", item)
-
-        if os.path.exists(dst):
-            if os.path.isfile(dst):
-                os.remove(dst)
-            else:
-                shutil.rmtree(dst)
-
-        shutil.move(src, dst)
-
-    shutil.rmtree(TMP_DIR)
-    print("[+] Update completed successfully.")
-    return True
+# Local version from settings.py
+try:
+    from program.lib.settings import VERSION
+except:
+    VERSION = "0.0.0"
 
 
 def check_for_updates():
     print("\n[+] Checking for updates on GitHub...")
 
-    local = get_local_version()
-    remote = get_remote_version()
+    api_url = "https://api.github.com/repos/nu11secur1ty/G0BurpSQLmaPI/releases/latest"
 
-    if remote is None:
-        print("[!] Could not connect to GitHub.")
+    try:
+        r = requests.get(api_url, timeout=5)
+    except Exception as e:
+        print(f"[!] Update check failed: {e}")
         return
 
-    if local == remote:
-        print("[+] You already have the latest version.")
+    # GitHub returns 404 because you do NOT use releases
+    if r.status_code != 200:
+        print("[+] No releases found (repo does not use GitHub releases).")
+        print("[+] Using fallback version comparison...")
+
+        # fallback → compare commit timestamps
+        fallback_url = "https://api.github.com/repos/nu11secur1ty/G0BurpSQLmaPI/commits/master"
+        try:
+            f = requests.get(fallback_url, timeout=5)
+            if f.status_code != 200:
+                print("[!] Could not check commits.")
+                return
+            latest_sha = f.json().get("sha", "unknown")
+        except Exception as e:
+            print(f"[!] Commit check failed: {e}")
+            return
+
+        print(f"[+] Remote commit: {latest_sha[:10]}")
+        print(f"[+] Local version: {VERSION}")
+
+        # always offer to update if commit changed
+        print("\n[+] Update available!")
+        do_update()
         return
 
-    print(f"[+] New version available: {remote}")
-    print("[+] Updating now...\n")
+    # if you accidentally create a GitHub release someday
+    latest_version = r.json().get("tag_name", None)
+    if not latest_version:
+        print("[!] Invalid release format.")
+        return
 
-    if update_repository():
-        write_local_version(remote)
-        print("[+] Updated to latest version!")
-        print("[+] Please restart G0BurpSQLmaPI.")
+    if latest_version.strip() == VERSION.strip():
+        print("[✓] You are up to date!")
     else:
-        print("[!] Update failed.")
+        print(f"[+] New version available: {latest_version}")
+        do_update()
+
+
+def do_update():
+    print("\n[+] Downloading latest version...")
+
+    try:
+        zip_data = requests.get(GITHUB_ZIP, timeout=10)
+    except Exception as e:
+        print(f"[!] Failed to download zip: {e}")
+        return
+
+    if zip_data.status_code != 200:
+        print("[!] GitHub returned non‑200 status.")
+        return
+
+    zip_path = "update.zip"
+    with open(zip_path, "wb") as f:
+        f.write(zip_data.content)
+
+    print("[+] Extracting...")
+
+    import zipfile
+    with zipfile.ZipFile(zip_path, "r") as zip_ref:
+        zip_ref.extractall("update_tmp")
+
+    # replace program directory
+    if os.path.exists("program"):
+        shutil.rmtree("program")
+
+    shutil.move("update_tmp/G0BurpSQLmaPI-master/program", "program")
+
+    os.remove(zip_path)
+    shutil.rmtree("update_tmp")
+
+    print("[✓] Update complete!")
+    print("Restart the tool.")
