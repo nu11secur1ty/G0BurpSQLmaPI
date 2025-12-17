@@ -14,6 +14,7 @@ SQLMAP_PROFILES = {
         "description": "Fast scanning profile with medium noise",
         "options": [
             "--batch",
+            "--answers=crack=Y,dict=Y,continue=Y,quit=N",
             "--risk=2",
             "--level=3",
             f"--tamper={TAMPERS}",
@@ -25,6 +26,7 @@ SQLMAP_PROFILES = {
         "description": "Low-noise bypass mode",
         "options": [
             "--batch",
+            "--answers=crack=Y,dict=Y,continue=Y,quit=N",
             "--risk=1",
             "--level=1",
             "--technique=E",
@@ -37,6 +39,7 @@ SQLMAP_PROFILES = {
         "description": "Blind SQLi timing attack",
         "options": [
             "--batch",
+            "--answers=crack=Y,dict=Y,continue=Y,quit=N",
             "--risk=3",
             "--level=5",
             "--technique=T",
@@ -48,6 +51,7 @@ SQLMAP_PROFILES = {
         "description": "Dump entire databases",
         "options": [
             "--batch",
+            "--answers=crack=Y,dict=Y,continue=Y,quit=N",
             "--dump-all",
             "--risk=3",
             "--level=5",
@@ -60,6 +64,7 @@ SQLMAP_PROFILES = {
         "description": "Maximum brute force & enumeration",
         "options": [
             "--batch",
+            "--answers=crack=Y,dict=Y,continue=Y,quit=N",
             "--risk=3",
             "--level=5",
             "--threads=10",
