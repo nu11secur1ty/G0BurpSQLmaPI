@@ -18,6 +18,7 @@ SQLMAP_PROFILES = {
             "--risk=2",
             "--level=3",
             f"--tamper={TAMPERS}",
+            "--dump"
         ],
     },
 
@@ -31,6 +32,7 @@ SQLMAP_PROFILES = {
             "--level=1",
             "--technique=E",
             f"--tamper={TAMPERS}",
+            "--dump"
         ],
     },
 
@@ -43,6 +45,7 @@ SQLMAP_PROFILES = {
             "--risk=3",
             "--level=5",
             "--technique=T",
+            "--dump"
         ],
     },
 
@@ -56,6 +59,7 @@ SQLMAP_PROFILES = {
             "--risk=3",
             "--level=5",
             f"--tamper={TAMPERS}",
+            "--dump"
         ],
     },
 
@@ -71,6 +75,7 @@ SQLMAP_PROFILES = {
             "--technique=BEUSTQ",
             "--os-shell",
             f"--tamper={TAMPERS}",
+            "--dump"
         ],
     },
 
