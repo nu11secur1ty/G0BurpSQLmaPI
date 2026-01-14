@@ -148,7 +148,7 @@ SQLMAP_PROFILES = {
     },
 
     # --------------------------------------------------------
-    # DEFAULT FULL (legacy, LAST)
+    # DEFAULT FULL (legacy, LAST) + UA options
     # --------------------------------------------------------
     "default_full": {
         "name": "⭐ DEFAULT FULL",
