@@ -382,6 +382,7 @@ def clean_up(logger):
 def display_menu():
     """Print the interactive menu."""
     print(Fore.CYAN + "\n===== G0BurpSQLmaPI Menu =====\n" + Style.RESET_ALL)
+    print("0. Make POST, GET request: lib/sqlitoris.py")
     print("1. Generate PoC (exploit.txt)")
     print("2. Start sqlmap with PoC")
     print("3. Run module: modules/URLi.py")
@@ -406,6 +407,8 @@ def interactive_main(verbose=False):
 
             if choice == '1':
                 create_exploit_file_interactive(logger)
+            elif choice == '0':
+                run_module("sqlitoris.py", logger)
             elif choice == '2':
                 run_sqlmap(logger)
             elif choice == '3':
