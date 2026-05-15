@@ -382,7 +382,7 @@ def clean_up(logger):
 def display_menu():
     """Print the interactive menu."""
     print(Fore.CYAN + "\n===== G0BurpSQLmaPI Menu =====\n" + Style.RESET_ALL)
-    print("0. Generate a direct POST, GET, or request exploit: lib/sqlitoris.py")
+    print("0. Generate a direct POST, GET, etc exploit: lib/sqlitoris.py")
     print("1. Generate PoC (exploit.txt)")
     print("2. Start sqlmap with PoC")
     print("3. Run module: modules/URLi.py")
