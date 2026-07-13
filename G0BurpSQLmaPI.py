@@ -336,7 +336,7 @@ def run_sqlmap(logger):
 def run_module(module_filename, logger):
     """
     Execute a python module stored inside modules/.
-    Example: URLi.py, User-Agent.py, HashCracker.py
+    Example: URLi.py, User-Agent.py, HashCracker.py, Users.py
     """
     ensure_modules_dir()
     module_path = MODULES_DIR / module_filename
@@ -388,9 +388,10 @@ def display_menu():
     print("3. Run module: modules/URLi.py")
     print("4. Run module: modules/User-Agent.py")
     print("5. Run module: modules/HashCracker.py")
-    print("6. View metadata")
-    print("7. Clean evidence")
-    print("8. Exit\n")
+    print("6. 👥 Run module: modules/Users.py - DUMP USERS")
+    print("7. View metadata")
+    print("8. Clean evidence")
+    print("9. Exit\n")
 
 def interactive_main(verbose=False):
     """
@@ -418,10 +419,12 @@ def interactive_main(verbose=False):
             elif choice == '5':
                 run_module("HashCracker.py", logger)
             elif choice == '6':
-                view_metadata()
+                run_module("Users.py", logger)
             elif choice == '7':
-                clean_up(logger)
+                view_metadata()
             elif choice == '8':
+                clean_up(logger)
+            elif choice == '9':
                 print(Fore.GREEN + "Exiting... Happy hunting ☠️" + Style.RESET_ALL)
                 break
             else:
