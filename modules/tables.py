@@ -1,3 +1,4 @@
+
 #!/usr/bin/env python3
 """
 G0BurpSQLmaPI - Tables Discovery Module
@@ -73,7 +74,7 @@ def display_banner():
     """Display module banner"""
     print(Fore.CYAN + """
 ╔═══════════════════════════════════════════════════════════════╗
-║                    📊 TABLES DISCOVERY MODULE                 ║
+║                    TABLES DISCOVERY MODULE                    ║
 ║           SCANS ALL DATABASES AND TABLES - NO DUMP           ║
 ║                   Author: nu11secur1ty                        ║
 ╚═══════════════════════════════════════════════════════════════╝
@@ -100,7 +101,7 @@ def find_sqlmap():
 def load_exploit():
     """Load exploit file and parameters"""
     if not EXPLOIT_PATH.exists():
-        print(Fore.RED + "❌ exploit.txt not found! Generate PoC first." + Style.RESET_ALL)
+        print(Fore.RED + "ERROR: exploit.txt not found! Generate PoC first." + Style.RESET_ALL)
         return None, None
     
     try:
@@ -111,7 +112,7 @@ def load_exploit():
                 vuln_params = meta.get("vuln_params", [])
         return EXPLOIT_PATH, vuln_params
     except Exception as e:
-        print(Fore.RED + f"❌ Error loading exploit: {e}" + Style.RESET_ALL)
+        print(Fore.RED + f"Error loading exploit: {e}" + Style.RESET_ALL)
         return None, None
 
 def get_base_cmd(sqlmap_path, exploit_path, vuln_params):
@@ -161,7 +162,7 @@ def run_sqlmap_command(cmd, description=""):
         return output
         
     except Exception as e:
-        print(Fore.RED + f"❌ Error: {e}" + Style.RESET_ALL)
+        print(Fore.RED + f"Error: {e}" + Style.RESET_ALL)
         return ""
 
 def get_databases(sqlmap_path, exploit_path, vuln_params):
@@ -223,30 +224,30 @@ def get_tables_from_db(sqlmap_path, exploit_path, vuln_params, database):
     return list(set(tables))
 
 def save_results(all_data):
-    """Save results to JSON and TXT files"""
+    """Save results to JSON and TXT files - NO EMOJIS"""
     # Save JSON
     json_file = OUTPUT_DIR / "tables_scan.json"
-    with open(json_file, 'w') as f:
+    with open(json_file, 'w', encoding='utf-8') as f:
         json.dump(all_data, f, indent=2)
     
-    print(Fore.GREEN + f"\n✅ JSON saved to: {json_file}" + Style.RESET_ALL)
+    print(Fore.GREEN + f"\n[+] JSON saved to: {json_file}" + Style.RESET_ALL)
     
-    # Save TXT
+    # Save TXT - NO EMOJIS!
     txt_file = OUTPUT_DIR / "tables_scan.txt"
-    with open(txt_file, 'w') as f:
+    with open(txt_file, 'w', encoding='utf-8') as f:
         f.write("="*60 + "\n")
         f.write("TABLES DISCOVERY RESULTS\n")
         f.write(f"Scan Date: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
         f.write("="*60 + "\n\n")
         
         for db, tables in all_data.items():
-            f.write(f"\n📁 Database: {db}\n")
-            f.write(f"📊 Tables: {len(tables)}\n")
+            f.write(f"\n[Database] {db}\n")
+            f.write(f"[Tables] {len(tables)}\n")
             f.write("-"*40 + "\n")
             for table in tables:
                 f.write(f"  - {table}\n")
     
-    print(Fore.GREEN + f"📄 TXT saved to: {txt_file}" + Style.RESET_ALL)
+    print(Fore.GREEN + f"[+] TXT saved to: {txt_file}" + Style.RESET_ALL)
 
 def run_tables_discovery():
     """Main function - discover all databases and tables"""
@@ -254,7 +255,7 @@ def run_tables_discovery():
     
     # Check if exploit exists
     if not EXPLOIT_PATH.exists():
-        print(Fore.RED + "❌ exploit.txt not found!" + Style.RESET_ALL)
+        print(Fore.RED + "ERROR: exploit.txt not found!" + Style.RESET_ALL)
         print(Fore.YELLOW + "Please generate PoC first using option 1 from main menu." + Style.RESET_ALL)
         input(Fore.CYAN + "\nPress Enter to exit..." + Style.RESET_ALL)
         return
@@ -262,7 +263,7 @@ def run_tables_discovery():
     # Find sqlmap
     sqlmap_path = find_sqlmap()
     if not sqlmap_path:
-        print(Fore.RED + "❌ sqlmap not found!" + Style.RESET_ALL)
+        print(Fore.RED + "ERROR: sqlmap not found!" + Style.RESET_ALL)
         input(Fore.CYAN + "\nPress Enter to exit..." + Style.RESET_ALL)
         return
     
@@ -295,12 +296,12 @@ def run_tables_discovery():
     databases = get_databases(sqlmap_path, exploit_path, vuln_params)
     
     if not databases:
-        print(Fore.RED + "❌ No databases found!" + Style.RESET_ALL)
+        print(Fore.RED + "No databases found!" + Style.RESET_ALL)
         input(Fore.CYAN + "\nPress Enter to exit..." + Style.RESET_ALL)
         return
     
     # Show databases
-    print(Fore.GREEN + f"\n✅ Found {len(databases)} databases:" + Style.RESET_ALL)
+    print(Fore.GREEN + f"\n[+] Found {len(databases)} databases:" + Style.RESET_ALL)
     for i, db in enumerate(databases, 1):
         print(f"    {i}. {db}")
     
@@ -328,14 +329,14 @@ def run_tables_discovery():
     print(Fore.CYAN + "\n" + "="*60)
     print("DISCOVERY COMPLETE")
     print("="*60 + Style.RESET_ALL)
-    print(Fore.GREEN + f"✅ Databases discovered: {len(databases)}" + Style.RESET_ALL)
-    print(Fore.GREEN + f"✅ Tables discovered: {total_tables}" + Style.RESET_ALL)
+    print(Fore.GREEN + f"[+] Databases discovered: {len(databases)}" + Style.RESET_ALL)
+    print(Fore.GREEN + f"[+] Tables discovered: {total_tables}" + Style.RESET_ALL)
     
     # Save results
     save_results(all_data)
     
-    print(Fore.CYAN + "\n💡 TIP: Update Users.py with these table names:" + Style.RESET_ALL)
-    print(Fore.YELLOW + "🔍 Look for: users, admins, members, login, accounts, profiles, customers, employees, auth, roles" + Style.RESET_ALL)
+    print(Fore.CYAN + "\nTIP: Update Users.py with these table names:" + Style.RESET_ALL)
+    print(Fore.YELLOW + "Look for: users, admins, members, login, accounts, profiles, customers, employees, auth, roles" + Style.RESET_ALL)
     
     input(Fore.CYAN + "\nPress Enter to exit..." + Style.RESET_ALL)
 
