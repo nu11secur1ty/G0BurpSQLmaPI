@@ -44,42 +44,31 @@ SQLMAP_DEFAULT_PATHS = [
 ]
 
 # ============================================================================
-# CORE USER TABLE KEYWORDS - ONLY THE MOST COMMON
+# MINIMAL USER TABLE KEYWORDS - ONLY THE ESSENTIAL
 # ============================================================================
 
 USER_TABLE_KEYWORDS = [
     'user', 'users', 'admin', 'admins', 'member', 'members',
     'login', 'logins', 'account', 'accounts', 'profile', 'profiles',
-    'customer', 'customers', 'employee', 'employees', 'staff',
-    'auth', 'credentials', 'sessions', 'tokens',
-    'role', 'roles', 'permission', 'permissions',
-    'wp_users', 'drupal_users', 'joomla_users',
-    'admin_users', 'password_reset', 'social_users',
-    'usuario', 'usuarios', 'utilisateur', 'benutzer'
+    'customer', 'customers', 'employee', 'employees',
+    'auth', 'role', 'roles', 'wp_users', 'admin_users'
 ]
 
 # ============================================================================
-# CORE USER COLUMN KEYWORDS - ONLY THE MOST COMMON
+# MINIMAL USER COLUMN KEYWORDS - ONLY THE ESSENTIAL
 # ============================================================================
 
 USER_COLUMN_KEYWORDS = [
     'user', 'username', 'email', 'password', 'pass', 'login',
-    'name', 'fullname', 'first_name', 'last_name', 'phone',
-    'mobile', 'address', 'role', 'admin', 'member', 'profile',
+    'name', 'first_name', 'last_name', 'phone', 'address',
+    'role', 'admin', 'member', 'profile',
     'user_id', 'uid', 'account',
-    'user_name', 'nickname', 'display_name', 'user_login',
-    'user_email', 'user_pass', 'user_password', 'userid',
-    'passwd', 'pwd', 'user_meta', 'user_profile', 'user_roles',
-    'auth_token', 'api_token', 'session_id', 'remember_token',
-    'password_hash', 'password_salt', 'password_reset',
-    'firstname', 'lastname', 'gender', 'country', 'state', 'city',
-    'phone_number', 'mobile_number', 'email_address',
-    'facebook_id', 'google_id', 'github_id',
-    'company', 'department', 'position', 'title',
+    'user_email', 'user_pass', 'user_password',
+    'passwd', 'pwd',
+    'auth_token', 'api_token', 'session_id',
+    'password_hash', 'password_salt',
     'created_at', 'updated_at', 'last_login',
-    'is_active', 'is_admin', 'is_verified', 'is_banned',
-    'meta_key', 'meta_value', 'user_settings',
-    'usuario', 'usuarios', 'utilisateur', 'benutzer'
+    'is_active', 'is_admin', 'is_verified'
 ]
 
 # SQLMAP ANSWERS - automatically answers all questions
