@@ -3,7 +3,7 @@
 ![](https://github.com/nu11secur1ty/G0BurpSQLmaPI/blob/master/Docs/G0BurpSQLmaPI.png)
 
 **Author:** nu11secur1ty  
-**Years:** 2023–2025  
+**Years:** 2023–2026  
 **Language:** Python (with optional Go modules)  
 **Purpose:** Generate SQLi Proof-of-Concept requests, automate sqlmap attacks, and manage attack modules with ease.
 
