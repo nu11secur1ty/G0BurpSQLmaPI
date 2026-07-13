@@ -191,8 +191,8 @@ def get_databases(sqlmap_path, exploit_path, vuln_params):
         return []
     
     databases = []
-    # FILTER - only keep REAL databases (no system, no test)
-    skip = ['information_schema', 'performance_schema', 'mysql', 'sys', 'phpmyadmin']
+    # FILTER - only keep REAL databases (no system, no test, no starting/ending)
+    skip = ['information_schema', 'performance_schema', 'mysql', 'sys', 'phpmyadmin', 'starting', 'ending']
     
     for line in output.split('\n'):
         match = re.search(r'\[\*\]\s+(\w+)', line)
