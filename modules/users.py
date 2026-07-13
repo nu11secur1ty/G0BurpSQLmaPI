@@ -191,11 +191,14 @@ def get_databases(sqlmap_path, exploit_path, vuln_params):
         return []
     
     databases = []
+    # FILTER - only keep REAL databases (no system, no test)
+    skip = ['information_schema', 'performance_schema', 'mysql', 'sys', 'phpmyadmin']
+    
     for line in output.split('\n'):
         match = re.search(r'\[\*\]\s+(\w+)', line)
         if match:
             db = match.group(1)
-            if db not in ['information_schema', 'performance_schema', 'mysql', 'sys']:
+            if db.lower() not in skip:
                 databases.append(db)
     
     if not databases:

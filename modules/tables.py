@@ -178,10 +178,9 @@ def get_real_databases(sqlmap_path, exploit_path, vuln_params):
     if not output:
         return []
     
-    # Blacklist - databases to ignore
+    # Blacklist - databases to ignore (NO starting/ending)
     blacklist = [
-        'information_schema', 'performance_schema', 'mysql', 'sys',
-        'starting', 'ending', 'test_db', 'tmp'
+        'information_schema', 'performance_schema', 'mysql', 'sys', 'phpmyadmin'
     ]
     
     databases = []
