@@ -154,8 +154,8 @@ pytest -q
 
 ## Changelog (high level)
 
-**2023–2025** — Initial project, CLI + interactive menu, PoC creation, sqlmap integration.  
-**2025** — Polished: metadata file, auto parameter detection, logging, argparse CLI, unit tests.
+**2023–2026** — Initial project, CLI + interactive menu, PoC creation, sqlmap integration.  
+**2026** — Polished: metadata file, auto parameter detection, logging, argparse CLI, unit tests.
 
 ---
 
