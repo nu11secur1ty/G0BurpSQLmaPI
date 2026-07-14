@@ -74,8 +74,8 @@ def display_banner():
     print(Fore.CYAN + """
 ╔═══════════════════════════════════════════════════════════════╗
 ║                    TABLES DISCOVERY MODULE                    ║
-║           SCANS REAL DATABASES, TABLES AND COLUMNS           ║
-║                   Author: nu11secur1ty                        ║
+║           SCANS REAL DATABASES, TABLES AND COLUMNS            ║
+║                    Author: nu11secur1ty                       ║
 ╚═══════════════════════════════════════════════════════════════╝
 """ + Style.RESET_ALL)
 
@@ -184,31 +184,37 @@ def get_real_databases(sqlmap_path, exploit_path, vuln_params):
     # SKIP - system AND test databases
     skip = [
         'information_schema', 'performance_schema', 'mysql', 'sys', 
-        'phpmyadmin', 'starting', 'ending'
+        'phpmyadmin', 'starting', 'ending', 'resuming', 'fetching', 'testing'
     ]
     
     for line in output.split('\n'):
+        line_clean = line.strip()
+        
         # Start collecting when we see the database list header
-        if "available databases [" in line.lower():
+        if "available databases [" in line_clean.lower():
             in_db_section = True
             continue
         
         # If we are in the database list section
         if in_db_section:
-            # Look for database names in the format [*] db_name
-            match = re.search(r'\[\*\]\s+([\w\-_]+)', line)
+            # Skip typical sqlmap logs that might show up in this block
+            if any(log_lvl in line_clean.lower() for log_lvl in ["[info]", "[warning]", "[error]", "[critical]"]):
+                continue
+            
+            # Look strictly for database names in the format [*] db_name
+            match = re.match(r'^\[\*\]\s+([\w\-_]+)\s*$', line_clean)
             if match:
                 db = match.group(1)
                 if db.lower() not in skip:
                     databases.append(db)
-            else:
-                # If we hit a line that's clearly not a database name,
-                # we're probably out of the list section
-                if line.strip() and not line.strip().startswith('['):
+            elif line_clean and not line_clean.startswith('[*]'):
+                # If we hit a line that's clearly not a database name and doesn't start with [*],
+                # we've exited the section
+                if len(databases) > 0:
                     in_db_section = False
     
     # Remove duplicates and sort
-    databases = sorted(set(databases))
+    databases = sorted(list(set(databases)))
     
     if databases:
         print(Fore.GREEN + f"\n[+] Found {len(databases)} REAL databases:" + Style.RESET_ALL)
@@ -220,7 +226,7 @@ def get_real_databases(sqlmap_path, exploit_path, vuln_params):
     return databases
 
 def get_real_tables(sqlmap_path, exploit_path, vuln_params, database):
-    """Get REAL tables from a database - filter out empty ones"""
+    """Get REAL tables from a database using ASCII table structures"""
     print(Fore.CYAN + f"[*] Getting tables from: {database}" + Style.RESET_ALL)
     
     cmd = get_base_cmd(sqlmap_path, exploit_path, vuln_params)
@@ -238,23 +244,27 @@ def get_real_tables(sqlmap_path, exploit_path, vuln_params, database):
     
     tables = []
     for line in output.split('\n'):
-        # Look for table names
-        match = re.search(r'\|+\s*(\w+)\s*\|+', line)
-        if match:
-            table = match.group(1)
-            if table and len(table) > 1 and table not in ['Table', '---', 'tables']:
-                tables.append(table)
+        line_clean = line.strip()
         
-        match = re.search(r'\[\*\]\s+(\w+)', line)
-        if match:
-            table = match.group(1)
-            if table and len(table) > 1:
+        # Parse output from sqlmap ASCII grids (e.g., | table_name |)
+        match_grid = re.search(r'^\|\s*([\w\-_]+)\s*\|', line_clean)
+        if match_grid:
+            table = match_grid.group(1)
+            if table.lower() not in ['table', 'tables'] and not table.startswith('-'):
+                tables.append(table)
+                continue
+        
+        # Fallback to standard list if no grid is found
+        match_list = re.match(r'^\[\*\]\s+([\w\-_]+)\s*$', line_clean)
+        if match_list:
+            table = match_list.group(1)
+            if table.lower() not in ['table', 'tables', 'starting', 'resuming', 'fetching']:
                 tables.append(table)
     
-    return list(set(tables))
+    return sorted(list(set(tables)))
 
 def get_table_columns(sqlmap_path, exploit_path, vuln_params, database, table):
-    """Get ALL columns from a specific table"""
+    """Get ALL columns from a specific table using ASCII table structures"""
     print(Fore.CYAN + f"    [*] Getting columns from: {database}.{table}" + Style.RESET_ALL)
     
     cmd = get_base_cmd(sqlmap_path, exploit_path, vuln_params)
@@ -267,20 +277,24 @@ def get_table_columns(sqlmap_path, exploit_path, vuln_params, database, table):
     
     columns = []
     for line in output.split('\n'):
-        # Look for column names
-        match = re.search(r'\|+\s*(\w+)\s*\|+', line)
-        if match:
-            col = match.group(1)
-            if col and len(col) > 1 and col not in ['Column', '---', 'columns']:
-                columns.append(col)
+        line_clean = line.strip()
         
-        match = re.search(r'\[\*\]\s+(\w+)', line)
-        if match:
-            col = match.group(1)
-            if col and len(col) > 1:
+        # Parse first column from sqlmap grids (e.g., | column_name | type |)
+        match_grid = re.search(r'^\|\s*([\w\-_]+)\s*\|', line_clean)
+        if match_grid:
+            col = match_grid.group(1)
+            if col.lower() not in ['column', 'columns'] and not col.startswith('-'):
+                columns.append(col)
+                continue
+                
+        # Fallback to standard list if no grid is found
+        match_list = re.match(r'^\[\*\]\s+([\w\-_]+)\s*$', line_clean)
+        if match_list:
+            col = match_list.group(1)
+            if col.lower() not in ['column', 'columns', 'starting', 'resuming', 'fetching']:
                 columns.append(col)
     
-    return list(set(columns))
+    return sorted(list(set(columns)))
 
 def save_results(all_data, databases_count, total_tables, total_columns):
     """Save results to JSON and TXT files - DISCOVERY ONLY"""
