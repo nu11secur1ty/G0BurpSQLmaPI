@@ -221,18 +221,22 @@ def get_tables_from_db(sqlmap_path, exploit_path, vuln_params, database):
         return []
     
     tables = []
+    in_table_section = False
+    
     for line in output.split('\n'):
-        match = re.search(r'\|+\s*(\w+)\s*\|+', line)
-        if match:
-            table = match.group(1)
-            if table and len(table) > 1 and table not in ['Table', '---', 'tables']:
-                tables.append(table)
+        if "Database:" in line or "tables for database" in line.lower():
+            in_table_section = True
+            continue
         
-        match = re.search(r'\[\*\]\s+(\w+)', line)
-        if match:
-            table = match.group(1)
-            if table and len(table) > 1:
-                tables.append(table)
+        if in_table_section:
+            # Look for table names from sqlmap output
+            match = re.search(r'\|+\s*(\w+)\s*\|+', line)
+            if match:
+                table = match.group(1)
+                if table and len(table) > 1 and table not in ['Table', '---', 'tables']:
+                    tables.append(table)
+            elif line.strip() and not line.strip().startswith('|') and not line.strip().startswith('['):
+                in_table_section = False
     
     return list(set(tables))
 

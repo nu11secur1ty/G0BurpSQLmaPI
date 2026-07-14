@@ -283,7 +283,7 @@ def get_table_columns(sqlmap_path, exploit_path, vuln_params, database, table):
     return list(set(columns))
 
 def save_results(all_data, databases_count, total_tables, total_columns):
-    """Save results to JSON and TXT files"""
+    """Save results to JSON and TXT files - DISCOVERY ONLY"""
     # Save JSON
     json_file = OUTPUT_DIR / "tables_scan.json"
     with open(json_file, 'w', encoding='utf-8') as f:
@@ -316,12 +316,12 @@ def save_results(all_data, databases_count, total_tables, total_columns):
     print(Fore.GREEN + f"[+] TXT saved to: {txt_file}" + Style.RESET_ALL)
 
 def run_tables_discovery():
-    """Main function - discover REAL databases, tables and columns"""
+    """Main function - discover REAL databases, tables and columns - NO DUMP"""
     display_banner()
     
     # Check if exploit exists
     if not EXPLOIT_PATH.exists():
-        print(Fore.RED + "ERROR: exploit.txt not found!" + Style.RESET_ALL)
+        print(Fore.RED + "ERROR: exploit.txt not found! Generate PoC first." + Style.RESET_ALL)
         print(Fore.YELLOW + "Please generate PoC first using option 1 from main menu." + Style.RESET_ALL)
         input(Fore.CYAN + "\nPress Enter to exit..." + Style.RESET_ALL)
         return
